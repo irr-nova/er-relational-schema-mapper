@@ -1,0 +1,244 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f7fb;
+  color: #172033;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Main App */
+.app {
+  min-height: 100vh;
+}
+
+/* Navigation */
+.navbar {
+  height: 72px;
+  padding: 0 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.logo span {
+  font-weight: 400;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-links button {
+  border: none;
+  background: transparent;
+  padding: 10px 14px;
+  color: #4b5563;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.nav-links button:hover {
+  background: #eef2ff;
+  color: #3346b8;
+}
+
+.theme-btn {
+  font-size: 18px !important;
+}
+
+/* Hero */
+.hero-section {
+  padding: 90px 7%;
+  background: linear-gradient(135deg, #eef2ff, #ffffff);
+}
+
+.hero-content {
+  max-width: 850px;
+}
+
+.tag {
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+}
+
+.hero-content h1 {
+  font-size: 58px;
+  line-height: 1.05;
+  margin: 0;
+  max-width: 800px;
+}
+
+.hero-content h1 span {
+  color: #4f46e5;
+}
+
+.description {
+  max-width: 650px;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1.7;
+  margin: 25px 0;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+/* Buttons */
+.primary-btn,
+.secondary-btn {
+  padding: 13px 20px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.primary-btn {
+  border: none;
+  background: #4f46e5;
+  color: white;
+}
+
+.primary-btn:hover {
+  background: #4338ca;
+}
+
+.secondary-btn {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+}
+
+.secondary-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Sections */
+.schema-section,
+.steps-section {
+  padding: 80px 7%;
+}
+
+.section-heading {
+  margin-bottom: 35px;
+}
+
+.section-heading h2 {
+  font-size: 36px;
+  margin: 5px 0 10px;
+}
+
+.section-heading p:last-child {
+  color: #64748b;
+}
+
+/* Schema Cards */
+.schema-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.schema-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+}
+
+.card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.card-title h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.card-title span {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.attribute {
+  padding: 13px 8px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+
+.attribute small {
+  float: right;
+  color: #94a3b8;
+}
+
+.attribute.primary {
+  font-weight: 600;
+}
+
+.attribute.foreign {
+  color: #2563eb;
+  font-size: 13px;
+}
+
+/* Mapping Steps */
+.steps-section {
+  background: white;
+}
+
+.steps {
+  max-width: 850px;
+}
+
+.step {
+  display: flex;
+  gap: 20px;
+  padding: 22px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.step-number {
+  min-width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+.step h3 {
+  margin: 3
