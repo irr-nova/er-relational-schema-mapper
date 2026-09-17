@@ -241,4 +241,223 @@ button {
 }
 
 .step h3 {
-  margin: 3
+  margin: 3px 0 8px;
+  font-size: 17px;
+}
+
+.step p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+/* Action Buttons */
+.actions {
+  padding: 70px 7%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+/* Footer */
+footer {
+  padding: 30px 7%;
+  background: #172033;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+footer p {
+  margin: 5px 0;
+}
+
+/* SQL Output */
+#sql-output {
+  scroll-margin-top: 80px;
+}
+
+#sql-output pre {
+  font-family: "Courier New", monospace;
+  line-height: 1.6;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Day / Night Mode */
+
+body.dark-mode {
+  background: #111827;
+  color: #f9fafb;
+}
+
+body.dark-mode .app {
+  background: #111827;
+  color: #f9fafb;
+}
+
+body.dark-mode .navbar {
+  background: #1f2937;
+  border-bottom-color: #374151;
+}
+
+body.dark-mode .nav-links button {
+  color: #f9fafb;
+}
+
+body.dark-mode .nav-links button:hover {
+  background: #374151;
+  color: #ffffff;
+}
+
+body.dark-mode .hero-section {
+  background: linear-gradient(135deg, #1f2937, #111827);
+}
+
+body.dark-mode .hero-section h1 {
+  color: #f9fafb;
+}
+
+body.dark-mode .hero-section h1 span {
+  color: #818cf8;
+}
+
+body.dark-mode .description {
+  color: #d1d5db;
+}
+
+body.dark-mode .schema-section,
+body.dark-mode .steps-section {
+  background: #111827;
+  color: #f9fafb;
+}
+
+body.dark-mode .section-heading p:last-child {
+  color: #d1d5db;
+}
+
+body.dark-mode .schema-card {
+  background: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+body.dark-mode .card-title {
+  border-bottom-color: #374151;
+}
+
+body.dark-mode .card-title span {
+  color: #9ca3af;
+}
+
+body.dark-mode .attribute {
+  border-bottom-color: #374151;
+  color: #f9fafb;
+}
+
+body.dark-mode .attribute small {
+  color: #9ca3af;
+}
+
+body.dark-mode .attribute.foreign {
+  color: #60a5fa;
+}
+
+body.dark-mode .step {
+  border-bottom-color: #374151;
+}
+
+body.dark-mode .step p {
+  color: #d1d5db;
+}
+
+body.dark-mode .step-number {
+  background: #312e81;
+  color: #c7d2fe;
+}
+
+body.dark-mode .secondary-btn {
+  background: #1f2937;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+body.dark-mode .secondary-btn:hover {
+  background: #374151;
+}
+
+body.dark-mode footer {
+  background: #030712;
+  color: #d1d5db;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .navbar {
+    padding: 0 4%;
+  }
+
+  .nav-links {
+    gap: 2px;
+  }
+
+  .nav-links button {
+    padding: 8px 9px;
+    font-size: 12px;
+  }
+
+  .hero-section {
+    padding: 70px 5%;
+  }
+
+  .hero-content h1 {
+    font-size: 45px;
+  }
+
+  .schema-section,
+  .steps-section {
+    padding: 60px 5%;
+  }
+
+  .schema-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    height: auto;
+    padding: 15px 5%;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hero-content h1 {
+    font-size: 38px;
+  }
+
+  .description {
+    font-size: 16px;
+  }
+
+  .hero-buttons,
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-buttons button,
+  .actions button {
+    width: 100%;
+  }
+}
