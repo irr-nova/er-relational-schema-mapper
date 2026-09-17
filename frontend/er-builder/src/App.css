@@ -1,0 +1,308 @@
+/* App.css */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    sans-serif;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ---------- Toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #1f2937;
+  align-items: center;
+}
+
+.toolbar button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.toolbar button:hover {
+  background: #2563eb;
+}
+
+.toolbar button.danger {
+  background: #ef4444;
+}
+
+.toolbar button.danger:hover {
+  background: #dc2626;
+}
+
+/* ---------- Validation panel ---------- */
+
+.validation-panel {
+  background: #fef3c7;
+  border-bottom: 1px solid #f59e0b;
+  padding: 10px 16px;
+}
+
+.validation-panel ul {
+  margin: 0 0 8px 0;
+  padding-left: 20px;
+}
+
+.validation-ok {
+  color: #15803d;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+/* ---------- Canvas ---------- */
+
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+/* ---------- Entity node ---------- */
+
+.entity-node {
+  background: white;
+  border: 2px solid #1f2937;
+  border-radius: 8px;
+  min-width: 200px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+}
+
+.entity-node.weak-entity {
+  border: 4px double #1f2937;
+}
+
+.entity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #e0e7ff;
+  padding: 8px 10px;
+  border-bottom: 1px solid #1f2937;
+  border-radius: 5px 5px 0 0;
+  font-weight: bold;
+}
+
+.entity-name {
+  overflow-wrap: anywhere;
+}
+
+.entity-header-buttons,
+.attribute-buttons,
+.relationship-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.icon-btn.small {
+  font-size: 11px;
+}
+
+.attribute-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.attribute-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 10px;
+}
+
+.attribute-item:hover {
+  background: #f3f4f6;
+}
+
+.attribute-text {
+  overflow-wrap: anywhere;
+}
+
+.add-attribute-btn {
+  width: 100%;
+  border: none;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 0 0 5px 5px;
+  font-size: 12px;
+}
+
+.add-attribute-btn:hover {
+  background: #eef2ff;
+}
+
+/* ---------- Relationship edge label ---------- */
+
+.relationship-label {
+  background: white;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.relationship-name {
+  font-weight: bold;
+}
+
+.relationship-cardinality {
+  color: #4b5563;
+  font-size: 11px;
+}
+
+.relationship-buttons {
+  justify-content: center;
+  margin-top: 2px;
+}
+
+/* ---------- Modals ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 360px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-box form label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.modal-box form input[type="text"],
+.modal-box form input:not([type="checkbox"]),
+.modal-box form select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-label input {
+  width: auto !important;
+}
+
+.participation-fieldset {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.participation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.participation-row select {
+  width: auto;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.modal-actions button[type="submit"] {
+  background: #3b82f6;
+  color: white;
+}
+
+.modal-actions button[type="button"] {
+  background: #e5e7eb;
+}
+
+.relationship-line {
+  stroke: #1f2937;
+  stroke-width: 1.5;
+}
