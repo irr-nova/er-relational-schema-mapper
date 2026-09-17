@@ -45,7 +45,8 @@ const edgeTypes = {
 
 const STORAGE_KEY = "er-builder-saved-state-v1";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL =
+  "https://er-relational-schema-mapper-api.onrender.com";
 
 function loadSavedState() {
   try {
