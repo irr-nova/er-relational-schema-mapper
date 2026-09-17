@@ -1,42 +1,87 @@
-import { useEffect, useState } from 'react'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
+
+type Attribute = {
+  name: string;
+  dataType: string;
+  primary?: boolean;
+  foreign?: string;
+};
 
 type Table = {
-  name: string
-  attributes: {
-    name: string
-    type: string
-    primary?: boolean
-    foreign?: string
-  }[]
-}
+  name: string;
+  columns: {
+    name: string;
+    dataType: string;
+  }[];
+  primaryKey: string[];
+  foreignKeys: {
+    column: string;
+    referencedTable: string;
+    referencedColumn: string;
+  }[];
+};
+
+type MappingResult = {
+  valid: boolean;
+  errors: string[];
+  relational_schema: {
+    tables: Table[];
+    relationships: {
+      name: string;
+      type: string;
+      cardinality: string;
+      mapping: string;
+      table?: string;
+    }[];
+    explanations: string[];
+  } | null;
+  sql: string | null;
+};
 
 const demoTables: Table[] = [
   {
-    name: 'STUDENT',
-    attributes: [
-      { name: 'StudentID', type: 'INT', primary: true },
-      { name: 'Name', type: 'VARCHAR(100)' },
-      { name: 'Email', type: 'VARCHAR(100)' },
+    name: "STUDENT",
+    columns: [
+      { name: "StudentID", dataType: "integer" },
+      { name: "Name", dataType: "string" },
+      { name: "Email", dataType: "string" },
     ],
+    primaryKey: ["StudentID"],
+    foreignKeys: [],
   },
   {
-    name: 'COURSE',
-    attributes: [
-      { name: 'CourseID', type: 'INT', primary: true },
-      { name: 'CourseName', type: 'VARCHAR(100)' },
+    name: "COURSE",
+    columns: [
+      { name: "CourseID", dataType: "integer" },
+      { name: "CourseName", dataType: "string" },
     ],
+    primaryKey: ["CourseID"],
+    foreignKeys: [],
   },
   {
-    name: 'ENROLLMENT',
-    attributes: [
-      { name: 'StudentID', type: 'INT', primary: true, foreign: 'STUDENT' },
-      { name: 'CourseID', type: 'INT', primary: true, foreign: 'COURSE' },
+    name: "ENROLLMENT",
+    columns: [
+      { name: "StudentID", dataType: "integer" },
+      { name: "CourseID", dataType: "integer" },
+    ],
+    primaryKey: ["StudentID", "CourseID"],
+    foreignKeys: [
+      {
+        column: "StudentID",
+        referencedTable: "STUDENT",
+        referencedColumn: "StudentID",
+      },
+      {
+        column: "CourseID",
+        referencedTable: "COURSE",
+        referencedColumn: "CourseID",
+      },
     ],
   },
-]
+];
 
-const sql = `CREATE TABLE STUDENT (
+const demoSql = `CREATE TABLE STUDENT (
   StudentID INT PRIMARY KEY,
   Name VARCHAR(100),
   Email VARCHAR(100)
@@ -53,44 +98,91 @@ CREATE TABLE ENROLLMENT (
   PRIMARY KEY (StudentID, CourseID),
   FOREIGN KEY (StudentID) REFERENCES STUDENT(StudentID),
   FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID)
-);`
+);`;
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false)
-  const [showSql, setShowSql] = useState(false)
-  const [showExplanation, setShowExplanation] = useState(false)
+  const [darkMode, setDarkMode] = useState(false);
+  const [showSql, setShowSql] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+
+  const [mappingResult, setMappingResult] = useState<MappingResult | null>(
+    null,
+  );
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.body.classList.toggle('dark-mode', darkMode)
-  }, [darkMode])
+    document.body.classList.toggle("dark-mode", darkMode);
+  }, [darkMode]);
+
+  useEffect(() => {
+    async function loadLatestMapping() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/latest");
+
+        if (!response.ok) {
+          throw new Error("Could not load the latest mapping.");
+        }
+
+        const result: MappingResult = await response.json();
+
+        if (result.valid) {
+          setMappingResult(result);
+        }
+      } catch (error) {
+        console.error("Could not load latest mapping:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadLatestMapping();
+  }, []);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
-  }
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   const downloadFile = (filename: string, content: string) => {
-    const blob = new Blob([content], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
+    const blob = new Blob([content], {
+      type: "text/plain",
+    });
 
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    link.click()
+    const url = URL.createObjectURL(blob);
 
-    URL.revokeObjectURL(url)
-  }
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const activeTables = mappingResult?.relational_schema?.tables || demoTables;
+
+  const activeSql = mappingResult?.sql || demoSql;
+
+  const activeExplanations = mappingResult?.relational_schema?.explanations || [
+    "Strong entity STUDENT is mapped to the STUDENT relation.",
+    "Strong entity COURSE is mapped to the COURSE relation.",
+    "M:N relationship ENROLLS is mapped to a separate relation.",
+    "Foreign keys connect the relationship relation to the entity relations.",
+  ];
 
   const handleGenerateSchema = () => {
-    scrollTo('schema')
-  }
+    scrollTo("schema");
+  };
 
   const handleGenerateSQL = () => {
-    setShowSql(true)
-    setTimeout(() => scrollTo('sql-output'), 50)
-  }
+    setShowSql(true);
+
+    setTimeout(() => {
+      scrollTo("sql-output");
+    }, 50);
+  };
 
   const handleDownloadReport = () => {
     const report = `ER DIAGRAM TO RELATIONAL SCHEMA MAPPER
@@ -98,91 +190,99 @@ function App() {
 RELATIONAL SCHEMA
 =================
 
-STUDENT
-- StudentID : INT (Primary Key)
-- Name : VARCHAR(100)
-- Email : VARCHAR(100)
+${activeTables
+  .map((table) => {
+    const columns = table.columns
+      .map((column) => {
+        const isPrimary = table.primaryKey.includes(column.name);
 
-COURSE
-- CourseID : INT (Primary Key)
-- CourseName : VARCHAR(100)
+        const foreignKey = table.foreignKeys.find(
+          (foreign) => foreign.column === column.name,
+        );
 
-ENROLLMENT
-- StudentID : INT (Primary Key, Foreign Key → STUDENT)
-- CourseID : INT (Primary Key, Foreign Key → COURSE)
+        let line = `- ${column.name} : ${column.dataType}`;
 
-MAPPING STEPS
-=============
+        if (isPrimary) {
+          line += " (Primary Key)";
+        }
 
-1. Strong Entity Detected
-   STUDENT is mapped to the STUDENT relation.
+        if (foreignKey) {
+          line += ` (Foreign Key → ${foreignKey.referencedTable}.${foreignKey.referencedColumn})`;
+        }
 
-2. Strong Entity Detected
-   COURSE is mapped to the COURSE relation.
+        return line;
+      })
+      .join("\n");
 
-3. M:N Relationship Detected
-   ENROLLS requires a separate relation.
+    return `${table.name}\n${columns}`;
+  })
+  .join("\n\n")}
 
-4. Foreign Keys Added
-   StudentID and CourseID are added as foreign keys.
+MAPPING EXPLANATION
+===================
+
+${activeExplanations
+  .map((explanation, index) => `${index + 1}. ${explanation}`)
+  .join("\n")}
 
 GENERATED SQL
 =============
 
-${sql}
-`
+${activeSql}
+`;
 
-    downloadFile('ER_Mapping_Report.txt', report)
-  }
+    downloadFile("ER_Mapping_Report.txt", report);
+  };
 
   const handleThemeToggle = () => {
-    setDarkMode((current) => !current)
-  }
+    setDarkMode((current) => !current);
+  };
 
   return (
     <div className="app">
-
       {/* Navigation Bar */}
       <nav className="navbar">
         <div
           className="logo"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          style={{ cursor: 'pointer' }}
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
+          }
+          style={{ cursor: "pointer" }}
         >
           ER <span>MAPPER</span>
         </div>
 
         <div className="nav-links">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <button
+            onClick={() =>
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              })
+            }
+          >
             Home
           </button>
 
-          <button onClick={() => scrollTo('schema')}>
-            Mapper
-          </button>
+          <button onClick={() => scrollTo("schema")}>Mapper</button>
 
-          <button onClick={() => scrollTo('learn')}>
-            Learn
-          </button>
+          <button onClick={() => scrollTo("learn")}>Learn</button>
 
-          <button onClick={() => scrollTo('practice')}>
-            Practice
-          </button>
+          <button onClick={() => scrollTo("practice")}>Practice</button>
 
-          <button onClick={() => scrollTo('help')}>
-            Help
-          </button>
+          <button onClick={() => scrollTo("help")}>Help</button>
 
-          <button onClick={() => scrollTo('developed-by')}>
-            Developed By
-          </button>
+          <button onClick={() => scrollTo("developed-by")}>Developed By</button>
 
           <button
             className="theme-btn"
             onClick={handleThemeToggle}
             title="Toggle day/night mode"
           >
-            {darkMode ? '☀️' : '🌙'}
+            {darkMode ? "☀️" : "🌙"}
           </button>
         </div>
       </nav>
@@ -198,23 +298,17 @@ ${sql}
           </h1>
 
           <p className="description">
-            Convert your Entity-Relationship diagram into a
-            structured relational database schema with clear
-            mapping steps and SQL generation.
+            Convert your Entity-Relationship diagram into a structured
+            relational database schema with clear mapping steps and SQL
+            generation.
           </p>
 
           <div className="hero-buttons">
-            <button
-              className="primary-btn"
-              onClick={handleGenerateSchema}
-            >
+            <button className="primary-btn" onClick={handleGenerateSchema}>
               Generate Schema →
             </button>
 
-            <button
-              className="secondary-btn"
-              onClick={() => scrollTo('learn')}
-            >
+            <button className="secondary-btn" onClick={() => scrollTo("learn")}>
               Learn ER Mapping
             </button>
           </div>
@@ -222,51 +316,55 @@ ${sql}
       </section>
 
       {/* Schema Section */}
-      <section
-        className="schema-section"
-        id="schema"
-      >
+      <section className="schema-section" id="schema">
         <div className="section-heading">
           <p className="tag">GENERATED OUTPUT</p>
           <h2>Relational Schema</h2>
           <p>
-            Example output generated from an ER diagram.
+            {loading
+              ? "Loading the latest mapping..."
+              : mappingResult?.valid
+                ? "Schema generated from your ER diagram."
+                : "Example output generated from an ER diagram."}
           </p>
         </div>
 
         <div className="schema-grid">
-          {demoTables.map((table) => (
-            <div
-              className="schema-card"
-              key={table.name}
-            >
+          {activeTables.map((table) => (
+            <div className="schema-card" key={table.name}>
               <div className="card-title">
                 <h3>{table.name}</h3>
                 <span>TABLE</span>
               </div>
 
-              {table.attributes.map((attribute) => (
-                <div
-                  className={`attribute ${
-                    attribute.primary ? 'primary' : ''
-                  } ${attribute.foreign ? 'foreign' : ''}`}
-                  key={attribute.name}
-                >
-                  {attribute.primary && '🔑 '}
-                  {attribute.foreign && '🔗 '}
-                  {attribute.name}
+              {table.columns.map((column) => {
+                const isPrimary = table.primaryKey.includes(column.name);
 
-                  {attribute.foreign && (
-                    <small>
-                      → {attribute.foreign}
-                    </small>
-                  )}
+                const foreignKey = table.foreignKeys.find(
+                  (foreign) => foreign.column === column.name,
+                );
 
-                  {!attribute.foreign && (
-                    <small>{attribute.type}</small>
-                  )}
-                </div>
-              ))}
+                return (
+                  <div
+                    className={`attribute ${isPrimary ? "primary" : ""} ${
+                      foreignKey ? "foreign" : ""
+                    }`}
+                    key={column.name}
+                  >
+                    {isPrimary && "🔑 "}
+
+                    {foreignKey && "🔗 "}
+
+                    {column.name}
+
+                    {foreignKey ? (
+                      <small>→ {foreignKey.referencedTable}</small>
+                    ) : (
+                      <small>{column.dataType}</small>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -280,66 +378,37 @@ ${sql}
         </div>
 
         <div className="steps">
+          {activeExplanations.map((explanation, index) => (
+            <div className="step" key={index}>
+              <div className="step-number">
+                {String(index + 1).padStart(2, "0")}
+              </div>
 
-          <div className="step">
-            <div className="step-number">01</div>
-            <div>
-              <h3>Strong Entity Detected</h3>
-              <p>
-                STUDENT is mapped to the STUDENT relation.
-              </p>
+              <div>
+                <h3>
+                  {index === 0
+                    ? "Entity Mapping"
+                    : index === 1
+                      ? "Entity Mapping"
+                      : index === 2
+                        ? "Relationship Mapping"
+                        : "Keys and References"}
+                </h3>
+
+                <p>{explanation}</p>
+              </div>
             </div>
-          </div>
-
-          <div className="step">
-            <div className="step-number">02</div>
-            <div>
-              <h3>Strong Entity Detected</h3>
-              <p>
-                COURSE is mapped to the COURSE relation.
-              </p>
-            </div>
-          </div>
-
-          <div className="step">
-            <div className="step-number">03</div>
-            <div>
-              <h3>M:N Relationship Detected</h3>
-              <p>
-                ENROLLS requires a separate relation.
-              </p>
-            </div>
-          </div>
-
-          <div className="step">
-            <div className="step-number">04</div>
-            <div>
-              <h3>Foreign Keys Added</h3>
-              <p>
-                StudentID and CourseID are added as foreignkeys.
-              </p>
-            </div>
-          </div>
-
+          ))}
         </div>
       </section>
 
       {/* Practice */}
-      <section
-        className="actions"
-        id="practice"
-      >
-        <button
-          className="primary-btn"
-          onClick={handleGenerateSQL}
-        >
+      <section className="actions" id="practice">
+        <button className="primary-btn" onClick={handleGenerateSQL}>
           Generate SQL
         </button>
 
-        <button
-          className="secondary-btn"
-          onClick={handleDownloadReport}
-        >
+        <button className="secondary-btn" onClick={handleDownloadReport}>
           Download Report
         </button>
 
@@ -348,17 +417,14 @@ ${sql}
           onClick={() => setShowExplanation((current) => !current)}
         >
           {showExplanation
-            ? 'Hide Mapping Explanation'
-            : 'View Mapping Explanation'}
+            ? "Hide Mapping Explanation"
+            : "View Mapping Explanation"}
         </button>
       </section>
 
       {/* SQL Output */}
       {showSql && (
-        <section
-          className="schema-section"
-          id="sql-output"
-        >
+        <section className="schema-section" id="sql-output">
           <div className="section-heading">
             <p className="tag">GENERATED SQL</p>
             <h2>SQL / DDL</h2>
@@ -366,84 +432,47 @@ ${sql}
 
           <pre
             style={{
-              maxWidth: '1000px',
-              margin: '0 auto',
-              padding: '24px',
-              borderRadius: '12px',
-              overflowX: 'auto',
-              textAlign: 'left',
-              background: darkMode ? '#111827' : '#f3f4f6',
+              maxWidth: "1000px",
+              margin: "0 auto",
+              padding: "24px",
+              borderRadius: "12px",
+              overflowX: "auto",
+              textAlign: "left",
+              background: darkMode ? "#111827" : "#f3f4f6",
             }}
           >
-            {sql}
+            {activeSql}
           </pre>
         </section>
       )}
 
       {/* Explanation */}
       {showExplanation && (
-        <section
-          className="steps-section"
-          id="explanation"
-        >
+        <section className="steps-section" id="explanation">
           <div className="section-heading">
             <p className="tag">EXPLAIN MY MAPPING</p>
+
             <h2>Why These Tables?</h2>
           </div>
 
           <div className="steps">
-            <div className="step">
-              <div className="step-number">1</div>
-              <div>
-                <h3>Entities become relations</h3>
-                <p>
-                  Each strong entity is represented as a separate
-                  relational table.
-                </p>
-              </div>
-            </div>
+            {activeExplanations.map((explanation, index) => (
+              <div className="step" key={index}>
+                <div className="step-number">{index + 1}</div>
 
-            <div className="step">
-              <div className="step-number">2</div>
-              <div>
-                <h3>Primary keys are preserved</h3>
-                <p>
-                  The primary key of each entity becomes the
-                  primary key of its corresponding relation.
-                </p>
-              </div>
-            </div>
+                <div>
+                  <h3>Mapping Rule {index + 1}</h3>
 
-            <div className="step">
-              <div className="step-number">3</div>
-              <div>
-                <h3>M:N relationship becomes a table</h3>
-                <p>
-                  ENROLLS connects STUDENT and COURSE, so a
-                  separate ENROLLMENT relation is created.
-                </p>
+                  <p>{explanation}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="step">
-              <div className="step-number">4</div>
-              <div>
-                <h3>Foreign keys connect relations</h3>
-                <p>
-                  StudentID and CourseID reference their
-                  corresponding parent relations.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
       )}
 
       {/* Help */}
-      <section
-        className="steps-section"
-        id="help"
-      >
+      <section className="steps-section" id="help">
         <div className="section-heading">
           <p className="tag">HELP</p>
           <h2>How to Use</h2>
@@ -452,44 +481,51 @@ ${sql}
         <div className="steps">
           <div className="step">
             <div className="step-number">01</div>
+
             <div>
               <h3>Create an ER Diagram</h3>
+
               <p>
-                Add entities, attributes, keys and relationships
-                using the Mapper.
+                Add entities, attributes, keys and relationships using the
+                Mapper.
               </p>
             </div>
           </div>
 
           <div className="step">
             <div className="step-number">02</div>
+
             <div>
               <h3>Validate the Model</h3>
+
               <p>
-                Check that entities, keys and relationships are
-                correctly defined.
+                Check that entities, keys and relationships are correctly
+                defined.
               </p>
             </div>
           </div>
 
           <div className="step">
             <div className="step-number">03</div>
+
             <div>
               <h3>Generate the Schema</h3>
+
               <p>
-                Convert the ER model into relational tables with
-                primary and foreign keys.
+                Convert the ER model into relational tables with primary and
+                foreign keys.
               </p>
             </div>
           </div>
 
           <div className="step">
             <div className="step-number">04</div>
+
             <div>
               <h3>Generate SQL</h3>
+
               <p>
-                Generate SQL DDL statements for the resulting
-                relational schema.
+                Generate SQL DDL statements for the resulting relational schema.
               </p>
             </div>
           </div>
@@ -497,10 +533,7 @@ ${sql}
       </section>
 
       {/* Developed By */}
-      <section
-        className="actions"
-        id="developed-by"
-      >
+      <section className="actions" id="developed-by">
         <div>
           <p className="tag">DEVELOPED BY</p>
 
@@ -526,25 +559,26 @@ ${sql}
             </p>
           </div>
 
-          <p>
-            Guided by Dr. Swaminathan A, Assistant Professor
-          </p>
+          <div style={{ marginTop: "32px" }}>
+            <p className="tag">GUIDED BY</p>
+
+            <p style={{ marginTop: "12px" }}>
+              <strong>Dr. Swaminathan A</strong>
+              <br />
+              Assistant Professor
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer>
-        <p>
-          ER Diagram to Relational Schema Mapper
-        </p>
+        <p>ER Diagram to Relational Schema Mapper</p>
 
-        <p>
-          DBMS Virtual Lab • Developed by Team
-        </p>
+        <p>DBMS Virtual Lab • Developed by Team</p>
       </footer>
-
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
