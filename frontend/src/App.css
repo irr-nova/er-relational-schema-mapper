@@ -484,3 +484,15 @@ body.dark-mode .heading-main {
 .hero-content h1 span {
   color: #4f46e5;
 }
+
+/* Light-mode steps heading visibility */
+.steps-section .section-heading h2,
+.steps-section .step h3 {
+  color: #172033;
+}
+
+/* Dark-mode steps heading visibility */
+body.dark-mode .steps-section .section-heading h2,
+body.dark-mode .steps-section .step h3 {
+  color: #f9fafb;
+}
