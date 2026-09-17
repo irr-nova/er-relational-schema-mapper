@@ -475,3 +475,12 @@ body.dark-mode .heading-main {
   text-decoration: none;
   display: inline-block;
 }
+
+/* Light-mode hero heading visibility fix */
+.hero-content h1 {
+  color: #172033;
+}
+
+.hero-content h1 span {
+  color: #4f46e5;
+}
