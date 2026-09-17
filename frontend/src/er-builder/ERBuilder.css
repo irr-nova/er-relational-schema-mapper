@@ -1,0 +1,476 @@
+.er-builder,
+.er-builder * {
+  box-sizing: border-box;
+}
+
+.er-builder {
+  width: 100%;
+  background: #f8fafc;
+  color: #111827;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* =========================
+   Header
+   ========================= */
+
+.er-builder .app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.er-builder .app-header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.er-builder .app-header p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* =========================
+   Buttons
+   ========================= */
+
+.er-builder button {
+  font-family: inherit;
+}
+
+.er-builder .icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.er-builder .icon-btn:hover {
+  background: #f3f4f6;
+}
+
+.er-builder .icon-btn.small {
+  font-size: 12px;
+  padding: 3px;
+}
+
+.er-builder .add-attribute-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: 1px dashed #9ca3af;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.er-builder .add-attribute-btn:hover {
+  background: #f3f4f6;
+}
+
+.er-builder .primary-btn,
+.er-builder .secondary-btn,
+.er-builder .danger-btn {
+  border: none;
+  border-radius: 7px;
+  padding: 8px 13px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.er-builder .primary-btn {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.er-builder .primary-btn:hover {
+  background: #1d4ed8;
+}
+
+.er-builder .secondary-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.er-builder .secondary-btn:hover {
+  background: #d1d5db;
+}
+
+.er-builder .danger-btn {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.er-builder .danger-btn:hover {
+  background: #b91c1c;
+}
+
+/* =========================
+   Toolbar
+   ========================= */
+
+.er-builder .toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.er-builder .toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.er-builder .toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #d1d5db;
+}
+
+/* =========================
+   Canvas
+   ========================= */
+
+.er-builder .canvas-wrapper {
+  width: 100%;
+  height: 650px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.er-builder .react-flow {
+  background: #f8fafc;
+}
+
+.er-builder .react-flow__controls {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.er-builder .react-flow__minimap {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* =========================
+   Entity Node
+   ========================= */
+
+.er-builder .entity-node {
+  min-width: 220px;
+  background: #ffffff;
+  border: 2px solid #374151;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.er-builder .entity-node.weak-entity {
+  border: 4px double #374151;
+}
+
+.er-builder .entity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #eef2ff;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.er-builder .entity-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.er-builder .entity-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.er-builder .attribute-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 10px;
+}
+
+.er-builder .attribute-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.er-builder .attribute-item:last-child {
+  border-bottom: none;
+}
+
+.er-builder .attribute-text {
+  font-size: 12px;
+  color: #374151;
+}
+
+.er-builder .attribute-buttons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* =========================
+   Relationship
+   ========================= */
+
+.er-builder .relationship-line {
+  pointer-events: none;
+}
+
+.er-builder .relationship-label {
+  min-width: 70px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.er-builder .relationship-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.er-builder .relationship-cardinality {
+  margin-top: 2px;
+  font-size: 10px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.er-builder .relationship-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+/* =========================
+   Validation
+   ========================= */
+
+.er-builder .validation-panel,
+.er-builder .mapping-error-panel {
+  margin: 14px 20px;
+  padding: 12px 14px;
+  border-radius: 8px;
+}
+
+.er-builder .validation-panel {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.er-builder .mapping-error-panel {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.er-builder .validation-panel h3,
+.er-builder .mapping-error-panel h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.er-builder .validation-panel ul,
+.er-builder .mapping-error-panel ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+/* =========================
+   Mapping Result
+   ========================= */
+
+.er-builder .mapping-result-panel {
+  margin: 20px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.er-builder .mapping-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.er-builder .mapping-result-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.er-builder .schema-tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.er-builder .schema-table {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.er-builder .schema-table h3 {
+  margin: 0;
+  padding: 9px 11px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #d1d5db;
+  font-size: 13px;
+  color: #111827;
+}
+
+.er-builder .schema-columns {
+  margin: 0;
+  padding: 7px 11px;
+  list-style: none;
+}
+
+.er-builder .schema-column {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.er-builder .schema-column:last-child {
+  border-bottom: none;
+}
+
+.er-builder .schema-key {
+  font-size: 10px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+/* =========================
+   Mapping Explanations
+   ========================= */
+
+.er-builder .mapping-explanations {
+  margin-top: 18px;
+}
+
+.er-builder .mapping-explanations h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #111827;
+}
+
+.er-builder .mapping-explanations p {
+  margin: 6px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+/* =========================
+   SQL
+   ========================= */
+
+.er-builder .sql-section {
+  margin-top: 18px;
+}
+
+.er-builder .sql-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.er-builder .sql-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #111827;
+}
+
+.er-builder .sql-section pre {
+  margin: 0;
+  padding: 14px;
+  max-height: 400px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 768px) {
+  .er-builder .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 14px 16px;
+  }
+
+  .er-builder .toolbar {
+    padding: 10px 14px;
+  }
+
+  .er-builder .canvas-wrapper {
+    height: 520px;
+  }
+
+  .er-builder .mapping-result-panel {
+    margin: 14px;
+    padding: 14px;
+  }
+
+  .er-builder .schema-tables {
+    grid-template-columns: 1fr;
+  }
+}

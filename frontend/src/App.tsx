@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+// @ts-expect-error ER Builder is a reusable JSX module.
+import ERBuilder from "./er-builder/ERBuilder.jsx";
+
 type Table = {
   name: string;
   columns: {
@@ -36,6 +39,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [showSql, setShowSql] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [showERBuilder, setShowERBuilder] = useState(false);
 
   const [mappingResult, setMappingResult] = useState<MappingResult | null>(
     null,
@@ -106,12 +110,32 @@ function App() {
     if (hasMapping) {
       scrollTo("schema");
     } else {
-      window.open("http://localhost:5173/", "_blank", "noopener,noreferrer");
+      setShowERBuilder(true);
+
+      setTimeout(() => {
+        scrollTo("er-builder-section");
+      }, 50);
     }
   };
 
   const handleOpenERBuilder = () => {
-    window.open("http://localhost:5173/", "_blank", "noopener,noreferrer");
+    setShowERBuilder(true);
+
+    setTimeout(() => {
+      scrollTo("er-builder-section");
+    }, 50);
+  };
+
+  const handleMappingGenerated = (result: MappingResult) => {
+    setMappingResult(result);
+    setLoading(false);
+    setShowERBuilder(false);
+    setShowSql(false);
+    setShowExplanation(false);
+
+    setTimeout(() => {
+      scrollTo("schema");
+    }, 100);
   };
 
   const handleGenerateSQL = () => {
@@ -281,6 +305,24 @@ ${activeSql}
         </div>
       </section>
 
+      {/* Integrated ER Builder */}
+      {showERBuilder && (
+        <section className="er-builder-section" id="er-builder-section">
+          <div className="section-heading">
+            <p className="tag">ER DIAGRAM BUILDER</p>
+
+            <h2>Create Your ER Diagram</h2>
+
+            <p>
+              Add entities, attributes and relationships, then generate your
+              relational schema.
+            </p>
+          </div>
+
+          <ERBuilder onMappingGenerated={handleMappingGenerated} />
+        </section>
+      )}
+
       {/* Schema Section */}
       <section className="schema-section" id="schema">
         <div className="section-heading">
@@ -329,9 +371,9 @@ ${activeSql}
 
                   return (
                     <div
-                      className={`attribute ${isPrimary ? "primary" : ""} ${
-                        foreignKey ? "foreign" : ""
-                      }`}
+                      className={`attribute ${
+                        isPrimary ? "primary" : ""
+                      } ${foreignKey ? "foreign" : ""}`}
                       key={column.name}
                     >
                       {isPrimary && "🔑 "}
