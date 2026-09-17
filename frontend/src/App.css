@@ -461,3 +461,17 @@ body.dark-mode footer {
     width: 100%;
   }
 }
+/* Heading visibility fix */
+.heading-main {
+  color: #172033;
+}
+
+body.dark-mode .heading-main {
+  color: #f9fafb;
+}
+
+.primary-btn,
+.secondary-btn {
+  text-decoration: none;
+  display: inline-block;
+}
