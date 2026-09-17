@@ -496,3 +496,25 @@ body.dark-mode .steps-section .section-heading h2,
 body.dark-mode .steps-section .step h3 {
   color: #f9fafb;
 }
+
+/* ER Builder button */
+.hero-buttons {
+  flex-wrap: wrap;
+}
+
+/* Mapping explanation scroll target */
+#explanation {
+  scroll-margin-top: 90px;
+}
+
+/* Light-mode mapping explanation visibility */
+.steps-section .section-heading h2,
+.steps-section .step h3 {
+  color: #172033;
+}
+
+/* Dark-mode mapping explanation visibility */
+body.dark-mode .steps-section .section-heading h2,
+body.dark-mode .steps-section .step h3 {
+  color: #f9fafb;
+}
