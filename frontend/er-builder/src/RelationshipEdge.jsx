@@ -2,31 +2,24 @@
 
 import {
   EdgeLabelRenderer,
-} from '@xyflow/react';
+} from "@xyflow/react";
 
 function perpendicularOffset(
   x1,
   y1,
   x2,
   y2,
-  distance
+  distance,
 ) {
   const dx = x2 - x1;
   const dy = y2 - y1;
 
   const length =
-    Math.sqrt(
-      dx * dx + dy * dy
-    ) || 1;
+    Math.sqrt(dx * dx + dy * dy) || 1;
 
   return {
-    nx:
-      (-dy / length) *
-      distance,
-
-    ny:
-      (dx / length) *
-      distance,
+    nx: (-dy / length) * distance,
+    ny: (dx / length) * distance,
   };
 }
 
@@ -44,20 +37,19 @@ function ParticipationLine({
         y1={y1}
         x2={x2}
         y2={y2}
+        stroke="#374151"
+        strokeWidth={2}
         className="relationship-line"
       />
     );
   }
 
-  const {
-    nx,
-    ny,
-  } = perpendicularOffset(
+  const { nx, ny } = perpendicularOffset(
     x1,
     y1,
     x2,
     y2,
-    2.5
+    2.5,
   );
 
   return (
@@ -67,6 +59,8 @@ function ParticipationLine({
         y1={y1 + ny}
         x2={x2 + nx}
         y2={y2 + ny}
+        stroke="#374151"
+        strokeWidth={2}
         className="relationship-line"
       />
 
@@ -75,6 +69,8 @@ function ParticipationLine({
         y1={y1 - ny}
         x2={x2 - nx}
         y2={y2 - ny}
+        stroke="#374151"
+        strokeWidth={2}
         className="relationship-line"
       />
     </>
@@ -94,20 +90,16 @@ export default function RelationshipEdge({
     onDelete,
   } = data;
 
-  const [
-    entityA,
-    entityB,
-  ] = relationship.entities;
+  const [entityA, entityB] =
+    relationship.entities;
 
   const isTotalA =
-    relationship.participation?.[
-      entityA
-    ] === 'total';
+    relationship.participation?.[entityA] ===
+    "total";
 
   const isTotalB =
-    relationship.participation?.[
-      entityB
-    ] === 'total';
+    relationship.participation?.[entityB] ===
+    "total";
 
   const midX =
     (sourceX + targetX) / 2;
@@ -121,7 +113,6 @@ export default function RelationshipEdge({
   return (
     <>
       {/* Invisible wider line makes the edge easier to interact with */}
-
       <line
         x1={sourceX}
         y1={sourceY}
@@ -132,7 +123,6 @@ export default function RelationshipEdge({
       />
 
       {/* First half */}
-
       <ParticipationLine
         x1={sourceX}
         y1={sourceY}
@@ -142,7 +132,6 @@ export default function RelationshipEdge({
       />
 
       {/* Second half */}
-
       <ParticipationLine
         x1={midX}
         y1={midY}
@@ -152,18 +141,15 @@ export default function RelationshipEdge({
       />
 
       {/* Relationship label */}
-
       <EdgeLabelRenderer>
         <div
           className="relationship-label"
           style={{
-            position: 'absolute',
-
+            position: "absolute",
             transform:
               `translate(-50%, -50%) ` +
               `translate(${midX}px, ${midY}px)`,
-
-            pointerEvents: 'all',
+            pointerEvents: "all",
           }}
         >
           <div className="relationship-name">
@@ -175,26 +161,20 @@ export default function RelationshipEdge({
           </div>
 
           {/* Relationship attributes */}
-
-          {relationshipAttributes.length >
-            0 && (
+          {relationshipAttributes.length > 0 && (
             <div
               style={{
-                marginTop: '3px',
-                fontSize: '10px',
-                color: '#374151',
+                marginTop: "3px",
+                fontSize: "10px",
+                color: "#374151",
               }}
             >
               {relationshipAttributes.map(
                 (attribute) => (
-                  <div
-                    key={
-                      attribute.id
-                    }
-                  >
+                  <div key={attribute.id}>
                     {attribute.name}
                   </div>
-                )
+                ),
               )}
             </div>
           )}

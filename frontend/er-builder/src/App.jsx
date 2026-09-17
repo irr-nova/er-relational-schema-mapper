@@ -47,27 +47,23 @@ const STORAGE_KEY = "er-builder-saved-state-v1";
 
 function loadSavedState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY);
 
-    if (!raw) {
+    if (!saved) {
       return {
         model: createEmptyModel(),
         positions: {},
       };
     }
 
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(saved);
 
     return {
       model: parsed.model || createEmptyModel(),
-
       positions: parsed.positions || {},
     };
   } catch (error) {
-    console.warn(
-      "Could not read saved diagram, starting with a blank one.",
-      error,
-    );
+    console.warn("Could not load saved ER model.", error);
 
     return {
       model: createEmptyModel(),
@@ -76,154 +72,176 @@ function loadSavedState() {
   }
 }
 
-function defaultPositionFor(index) {
-  return {
-    x: 120 + (index % 4) * 240,
-
-    y: 120 + Math.floor(index / 4) * 220,
-  };
-}
-
 export default function App() {
   const initialSavedState = useRef(loadSavedState()).current;
 
   const [model, setModel] = useState(initialSavedState.model);
-
   const [nodes, setNodes] = useState([]);
-
   const [edges, setEdges] = useState([]);
 
   const savedPositionsRef = useRef(initialSavedState.positions);
 
   const [editing, setEditing] = useState(null);
-
   const [validationIssues, setValidationIssues] = useState(null);
 
-  // ====================================================
-  // NODES
-  // ====================================================
+  const [mappingResult, setMappingResult] = useState(null);
+  const [mappingLoading, setMappingLoading] = useState(false);
+  const [mappingError, setMappingError] = useState(null);
 
+  /*
+   * Convert the participation object used by the ER Builder
+   * into the shared format expected by the Mapping Engine.
+   */
+  function prepareModelForMapping(currentModel) {
+    return {
+      ...currentModel,
+
+      relationships: currentModel.relationships.map((relationship) => {
+        const entityIds = relationship.entities || [];
+        const participation = relationship.participation || {};
+
+        return {
+          ...relationship,
+
+          participation: {
+            entity_1:
+              participation[entityIds[0]] ||
+              participation.entity_1 ||
+              "partial",
+
+            entity_2:
+              participation[entityIds[1]] ||
+              participation.entity_2 ||
+              "partial",
+          },
+        };
+      }),
+    };
+  }
+
+  /*
+   * Build React Flow nodes.
+   */
   useEffect(() => {
-    setNodes((currentNodes) => {
-      const positionById = new Map(
-        currentNodes.map((node) => [node.id, node.position]),
-      );
+    const nextNodes = model.entities.map((entity, index) => {
+      const savedPosition = savedPositionsRef.current[entity.id];
 
-      return model.entities.map((entity, index) => ({
+      return {
         id: entity.id,
-
         type: "entityNode",
 
-        position:
-          positionById.get(entity.id) ||
-          savedPositionsRef.current[entity.id] ||
-          defaultPositionFor(index),
+        position: savedPosition || {
+          x: 100 + (index % 3) * 300,
+          y: 100 + Math.floor(index / 3) * 250,
+        },
 
         data: {
           entity,
 
-          onEditEntity: () =>
+          onEditEntity: () => {
             setEditing({
               type: "entity",
               id: entity.id,
-            }),
+            });
+          },
 
-          onDeleteEntity: () => handleDeleteEntity(entity.id),
+          onDeleteEntity: () => {
+            handleDeleteEntity(entity.id);
+          },
 
-          onAddAttribute: () => handleAddAttribute(entity.id),
+          onAddAttribute: () => {
+            handleAddAttribute(entity.id);
+          },
 
-          onEditAttribute: (attributeId) =>
+          onEditAttribute: (attributeId) => {
             setEditing({
               type: "attribute",
               id: attributeId,
               entityId: entity.id,
-            }),
+            });
+          },
 
-          onDeleteAttribute: (attributeId) =>
-            handleDeleteAttribute(entity.id, attributeId),
+          onDeleteAttribute: (attributeId) => {
+            handleDeleteAttribute(entity.id, attributeId);
+          },
         },
-      }));
+      };
     });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model]);
+    setNodes(nextNodes);
+  }, [model.entities]);
 
-  // ====================================================
-  // EDGES
-  // ====================================================
-
+  /*
+   * Build React Flow edges.
+   */
   useEffect(() => {
-    setEdges(
-      model.relationships.map((relationship) => ({
+    const nextEdges = model.relationships
+      .filter(
+        (relationship) =>
+          relationship.entities && relationship.entities.length >= 2,
+      )
+      .map((relationship) => ({
         id: relationship.id,
 
         source: relationship.entities[0],
-
-        target: relationship.entities[1] || relationship.entities[0],
+        target: relationship.entities[1],
 
         type: "relationshipEdge",
 
         data: {
           relationship,
 
-          onEdit: () =>
+          onEdit: () => {
             setEditing({
               type: "relationship",
               id: relationship.id,
-            }),
+            });
+          },
 
-          onDelete: () => handleDeleteRelationship(relationship.id),
+          onDelete: () => {
+            handleDeleteRelationship(relationship.id);
+          },
         },
-      })),
-    );
+      }));
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model]);
+    setEdges(nextEdges);
+  }, [model.relationships]);
 
-  // ====================================================
-  // AUTO SAVE
-  // ====================================================
-
-  const saveTimeoutRef = useRef(null);
-
+  /*
+   * Auto-save.
+   */
   useEffect(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
+    const positions = {};
 
-    saveTimeoutRef.current = setTimeout(() => {
-      const positions = Object.fromEntries(
-        nodes.map((node) => [node.id, node.position]),
+    nodes.forEach((node) => {
+      positions[node.id] = node.position;
+    });
+
+    savedPositionsRef.current = positions;
+
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          model,
+          positions,
+        }),
       );
-
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            model,
-            positions,
-          }),
-        );
-      } catch (error) {
-        console.warn("Could not save diagram to localStorage.", error);
-      }
-    }, 300);
-
-    return () => clearTimeout(saveTimeoutRef.current);
+    } catch (error) {
+      console.warn("Could not save ER model.", error);
+    }
   }, [model, nodes]);
 
-  // ====================================================
-  // NODE DRAGGING
-  // ====================================================
-
+  /*
+   * React Flow node changes.
+   */
   const onNodesChange = useCallback((changes) => {
     setNodes((currentNodes) => applyNodeChanges(changes, currentNodes));
   }, []);
 
-  // ====================================================
-  // CREATE RELATIONSHIP
-  // ====================================================
-
+  /*
+   * Create relationship.
+   */
   const onConnect = useCallback((connection) => {
     if (!connection.source || !connection.target) {
       return;
@@ -238,10 +256,9 @@ export default function App() {
     );
   }, []);
 
-  // ====================================================
-  // ENTITY HANDLERS
-  // ====================================================
-
+  /*
+   * Entity operations.
+   */
   function handleAddEntity() {
     setModel((currentModel) =>
       addEntity(currentModel, `Entity${currentModel.entities.length + 1}`),
@@ -260,10 +277,9 @@ export default function App() {
     setModel((currentModel) => deleteEntity(currentModel, entityId));
   }
 
-  // ====================================================
-  // ATTRIBUTE HANDLERS
-  // ====================================================
-
+  /*
+   * Attribute operations.
+   */
   function handleAddAttribute(entityId) {
     setModel((currentModel) => addAttribute(currentModel, entityId, {}));
   }
@@ -274,10 +290,9 @@ export default function App() {
     );
   }
 
-  // ====================================================
-  // RELATIONSHIP HANDLERS
-  // ====================================================
-
+  /*
+   * Relationship operations.
+   */
   function handleDeleteRelationship(relationshipId) {
     if (!window.confirm("Delete this relationship?")) {
       return;
@@ -292,40 +307,105 @@ export default function App() {
     setModel((currentModel) =>
       updateRelationship(currentModel, editing.id, updates),
     );
+
+    setEditing(null);
   }
 
-  // ====================================================
-  // SAVE ENTITY
-  // ====================================================
-
+  /*
+   * Save entity.
+   */
   function handleSaveEntity(updates) {
     setModel((currentModel) => updateEntity(currentModel, editing.id, updates));
+
+    setEditing(null);
   }
 
-  // ====================================================
-  // SAVE ATTRIBUTE
-  // ====================================================
-
+  /*
+   * Save attribute.
+   */
   function handleSaveAttribute(updates) {
     setModel((currentModel) =>
       updateAttribute(currentModel, editing.entityId, editing.id, updates),
     );
+
+    setEditing(null);
   }
 
-  // ====================================================
-  // VALIDATE
-  // ====================================================
-
+  /*
+   * Local validation.
+   */
   function handleValidate() {
     const issues = validateModel(model);
 
     setValidationIssues(issues);
   }
 
-  // ====================================================
-  // EXPORT
-  // ====================================================
+  /*
+   * Generate relational schema.
+   */
+  async function handleGenerateSchema() {
+    console.log("Generate Relational Schema clicked");
 
+    setMappingLoading(true);
+    setMappingError(null);
+    setMappingResult(null);
+
+    try {
+      const modelForMapping = prepareModelForMapping(model);
+
+      console.log("Sending model to mapping engine:", modelForMapping);
+
+      const response = await fetch("/api/map", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(modelForMapping),
+      });
+
+      console.log("Mapping engine response status:", response.status);
+
+      const result = await response.json();
+
+      console.log("Mapping engine response:", result);
+
+      if (!response.ok) {
+        const backendErrors = result?.detail
+          ?.map((error) => {
+            const location = error.loc?.join(" → ") || "";
+
+            return `${location}: ${error.msg}`;
+          })
+          .join("\n");
+
+        throw new Error(
+          backendErrors || `Mapping engine returned HTTP ${response.status}.`,
+        );
+      }
+
+      setMappingResult(result);
+
+      if (!result.valid) {
+        setMappingError(
+          result.errors?.join("\n") || "The ER model could not be mapped.",
+        );
+      }
+    } catch (error) {
+      console.error("Mapping failed:", error);
+
+      setMappingError(
+        error.message || "Could not connect to the mapping engine.",
+      );
+    } finally {
+      setMappingLoading(false);
+    }
+  }
+
+  /*
+   * Export.
+   */
   function handleExport() {
     const blob = new Blob([JSON.stringify(model, null, 2)], {
       type: "application/json",
@@ -343,10 +423,9 @@ export default function App() {
     URL.revokeObjectURL(url);
   }
 
-  // ====================================================
-  // CLEAR
-  // ====================================================
-
+  /*
+   * Clear.
+   */
   function handleClear() {
     if (!window.confirm("Clear the entire canvas? This cannot be undone.")) {
       return;
@@ -355,6 +434,8 @@ export default function App() {
     setModel(createEmptyModel());
 
     setValidationIssues(null);
+    setMappingResult(null);
+    setMappingError(null);
 
     savedPositionsRef.current = {};
 
@@ -365,10 +446,9 @@ export default function App() {
     }
   }
 
-  // ====================================================
-  // CURRENT EDITING OBJECTS
-  // ====================================================
-
+  /*
+   * Editing lookups.
+   */
   const editingEntity =
     editing?.type === "entity"
       ? model.entities.find((entity) => entity.id === editing.id)
@@ -388,20 +468,42 @@ export default function App() {
         )
       : null;
 
-  // ====================================================
-  // UI
-  // ====================================================
-
   return (
-    <div className="app-container">
+    <div className="app">
+      <header className="app-header">
+        <div>
+          <h1>ER Diagram to Relational Schema Mapper</h1>
+
+          <p>Build an ER diagram and convert it into a relational schema.</p>
+        </div>
+      </header>
+
       <div className="toolbar">
-        <button onClick={handleAddEntity}>+ Add Entity</button>
+        <button type="button" onClick={handleAddEntity}>
+          + Add Entity
+        </button>
 
-        <button onClick={handleValidate}>Validate</button>
+        <button type="button" onClick={handleValidate}>
+          Validate
+        </button>
 
-        <button onClick={handleExport}>Export ER Model</button>
+        <button
+          type="button"
+          onClick={() => {
+            console.log("Generate button pressed");
 
-        <button onClick={handleClear} className="danger">
+            handleGenerateSchema();
+          }}
+          disabled={mappingLoading}
+        >
+          {mappingLoading ? "Generating..." : "Generate Relational Schema"}
+        </button>
+
+        <button type="button" onClick={handleExport}>
+          Export ER Model
+        </button>
+
+        <button type="button" onClick={handleClear} className="danger">
           Clear Canvas
         </button>
       </div>
@@ -418,7 +520,21 @@ export default function App() {
             </ul>
           )}
 
-          <button onClick={() => setValidationIssues(null)}>Dismiss</button>
+          <button type="button" onClick={() => setValidationIssues(null)}>
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {mappingError && (
+        <div className="mapping-error-panel">
+          <strong>Mapping Error</strong>
+
+          <pre>{mappingError}</pre>
+
+          <button type="button" onClick={() => setMappingError(null)}>
+            Dismiss
+          </button>
         </div>
       )}
 
@@ -438,6 +554,101 @@ export default function App() {
           <MiniMap />
         </ReactFlow>
       </div>
+
+      {mappingResult?.valid && (
+        <section className="mapping-result-panel">
+          <div className="mapping-result-header">
+            <div>
+              <h2>Relational Schema</h2>
+
+              <p>The ER model was successfully mapped to relational tables.</p>
+            </div>
+          </div>
+
+          {mappingResult.relational_schema?.tables?.length > 0 && (
+            <div className="schema-tables">
+              {mappingResult.relational_schema.tables.map((table) => (
+                <div className="schema-table" key={table.name}>
+                  <h3>{table.name}</h3>
+
+                  <div className="schema-columns">
+                    {table.columns.map((column) => (
+                      <div className="schema-column" key={column.name}>
+                        <span>{column.name}</span>
+
+                        <span>{column.dataType}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {table.primaryKey?.length > 0 && (
+                    <div className="schema-key">
+                      <strong>Primary Key:</strong>{" "}
+                      {table.primaryKey.join(", ")}
+                    </div>
+                  )}
+
+                  {table.foreignKeys?.length > 0 && (
+                    <div className="schema-key">
+                      <strong>Foreign Keys:</strong>
+
+                      <ul>
+                        {table.foreignKeys.map((foreignKey) => (
+                          <li
+                            key={`${foreignKey.column}-${foreignKey.referencedTable}`}
+                          >
+                            {foreignKey.column}
+                            {" → "}
+                            {foreignKey.referencedTable}
+                            {"("}
+                            {foreignKey.referencedColumn}
+                            {")"}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mappingResult.relational_schema?.explanations?.length > 0 && (
+            <div className="mapping-explanations">
+              <h3>Mapping Explanation</h3>
+
+              <ul>
+                {mappingResult.relational_schema.explanations.map(
+                  (explanation, index) => (
+                    <li key={index}>{explanation}</li>
+                  ),
+                )}
+              </ul>
+            </div>
+          )}
+
+          {mappingResult.sql && (
+            <div className="sql-section">
+              <div className="sql-header">
+                <h3>Generated SQL</h3>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigator.clipboard.writeText(mappingResult.sql)
+                  }
+                >
+                  Copy SQL
+                </button>
+              </div>
+
+              <pre>
+                <code>{mappingResult.sql}</code>
+              </pre>
+            </div>
+          )}
+        </section>
+      )}
 
       {editingEntity && (
         <EntityEditForm
