@@ -37,22 +37,22 @@ const demoTables: Table[] = [
 ]
 
 const sql = `CREATE TABLE STUDENT (
-    StudentID INT PRIMARY KEY,
-    Name VARCHAR(100),
-    Email VARCHAR(100)
+  StudentID INT PRIMARY KEY,
+  Name VARCHAR(100),
+  Email VARCHAR(100)
 );
 
 CREATE TABLE COURSE (
-    CourseID INT PRIMARY KEY,
-    CourseName VARCHAR(100)
+  CourseID INT PRIMARY KEY,
+  CourseName VARCHAR(100)
 );
 
 CREATE TABLE ENROLLMENT (
-    StudentID INT,
-    CourseID INT,
-    PRIMARY KEY (StudentID, CourseID),
-    FOREIGN KEY (StudentID) REFERENCES STUDENT(StudentID),
-    FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID)
+  StudentID INT,
+  CourseID INT,
+  PRIMARY KEY (StudentID, CourseID),
+  FOREIGN KEY (StudentID) REFERENCES STUDENT(StudentID),
+  FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID)
 );`
 
 function App() {
@@ -316,7 +316,7 @@ ${sql}
             <div>
               <h3>Foreign Keys Added</h3>
               <p>
-                StudentID and CourseID are added as foreign keys.
+                StudentID and CourseID are added as foreignkeys.
               </p>
             </div>
           </div>
@@ -503,8 +503,32 @@ ${sql}
       >
         <div>
           <p className="tag">DEVELOPED BY</p>
+
           <h2>ER Mapper Team</h2>
-          <p>Guided by Dr. Swaminathan A, Assistant Professor</p>
+
+          <div className="team-members">
+            <p>
+              <strong>Isha Rajendra Rokade</strong>
+              <br />
+              25BCE1667
+            </p>
+
+            <p>
+              <strong>Akshara Ashok Kumar</strong>
+              <br />
+              25BCE5279
+            </p>
+
+            <p>
+              <strong>A. Bapithamary</strong>
+              <br />
+              25BCE55787
+            </p>
+          </div>
+
+          <p>
+            Guided by Dr. Swaminathan A, Assistant Professor
+          </p>
         </div>
       </section>
 
