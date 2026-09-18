@@ -5,11 +5,14 @@ function Modal({ title, onClose, children }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>{title}</h3>
+          <div>
+            <h3>{title}</h3>
+            <p>Edit the details and save your changes.</p>
+          </div>
 
           <button
             type="button"
-            className="icon-btn"
+            className="modal-close-btn"
             onClick={onClose}
             title="Close"
           >
@@ -17,7 +20,7 @@ function Modal({ title, onClose, children }) {
           </button>
         </div>
 
-        {children}
+        <div className="modal-content">{children}</div>
       </div>
     </div>
   );
@@ -44,31 +47,51 @@ export function EntityEditForm({ entity, onSave, onClose }) {
 
   return (
     <Modal title="Edit Entity" onClose={onClose}>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-          />
-        </label>
+      <form onSubmit={handleSubmit} className="modal-form">
+        <div className="form-section">
+          <div className="form-section-heading">
+            <span className="form-section-number">1</span>
+            <div>
+              <strong>Entity Details</strong>
+              <small>Update the entity name and type.</small>
+            </div>
+          </div>
 
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={isWeak}
-            onChange={(e) => setIsWeak(e.target.checked)}
-          />
-          Weak Entity
-        </label>
+          <label className="form-label">
+            <span>Name</span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
+              placeholder="Enter entity name"
+            />
+          </label>
+
+          <label className="checkbox-card">
+            <input
+              type="checkbox"
+              checked={isWeak}
+              onChange={(e) => setIsWeak(e.target.checked)}
+            />
+
+            <span className="checkbox-content">
+              <strong>Weak Entity</strong>
+              <small>
+                Mark this if the entity depends on another entity for its
+                identification.
+              </small>
+            </span>
+          </label>
+        </div>
 
         <div className="modal-actions">
-          <button type="submit">Save</button>
-
-          <button type="button" onClick={onClose}>
+          <button type="button" className="modal-cancel-btn" onClick={onClose}>
             Cancel
+          </button>
+
+          <button type="submit" className="modal-save-btn">
+            Save Changes
           </button>
         </div>
       </form>
@@ -115,75 +138,116 @@ export function AttributeEditForm({ attribute, onSave, onClose }) {
 
   return (
     <Modal title="Edit Attribute" onClose={onClose}>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-          />
-        </label>
+      <form onSubmit={handleSubmit} className="modal-form">
+        <div className="form-section">
+          <div className="form-section-heading">
+            <span className="form-section-number">1</span>
+            <div>
+              <strong>Basic Details</strong>
+              <small>Define the attribute and its data type.</small>
+            </div>
+          </div>
 
-        <label>
-          Attribute Type
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="simple">Simple</option>
-            <option value="composite">Composite</option>
-            <option value="multivalued">Multivalued</option>
-            <option value="derived">Derived</option>
-          </select>
-        </label>
-
-        {type === "composite" && (
-          <label>
-            Component attributes
+          <label className="form-label">
+            <span>Name</span>
             <input
-              value={componentsText}
-              onChange={(e) => setComponentsText(e.target.value)}
-              placeholder="Street, City, ZIP"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
+              placeholder="Enter attribute name"
             />
           </label>
-        )}
 
-        <label>
-          Data Type
-          <select
-            value={dataType}
-            onChange={(e) => setDataType(e.target.value)}
-          >
-            <option value="string">String</option>
-            <option value="integer">Integer</option>
-            <option value="float">Float</option>
-            <option value="date">Date</option>
-            <option value="boolean">Boolean</option>
-          </select>
-        </label>
+          <div className="form-grid">
+            <label className="form-label">
+              <span>Attribute Type</span>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+              >
+                <option value="simple">Simple</option>
+                <option value="composite">Composite</option>
+                <option value="multivalued">Multivalued</option>
+                <option value="derived">Derived</option>
+              </select>
+            </label>
 
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={isPrimaryKey}
-            onChange={(e) => setIsPrimaryKey(e.target.checked)}
-          />
-          Primary Key
-        </label>
+            <label className="form-label">
+              <span>Data Type</span>
+              <select
+                value={dataType}
+                onChange={(e) => setDataType(e.target.value)}
+              >
+                <option value="string">String</option>
+                <option value="integer">Integer</option>
+                <option value="float">Float</option>
+                <option value="date">Date</option>
+                <option value="boolean">Boolean</option>
+              </select>
+            </label>
+          </div>
 
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={isPartialKey}
-            onChange={(e) => setIsPartialKey(e.target.checked)}
-          />
-          Partial Key
-        </label>
+          {type === "composite" && (
+            <label className="form-label">
+              <span>Component Attributes</span>
+              <input
+                value={componentsText}
+                onChange={(e) => setComponentsText(e.target.value)}
+                placeholder="Street, City, ZIP"
+              />
+              <small className="field-help">
+                Separate component attributes with commas.
+              </small>
+            </label>
+          )}
+        </div>
+
+        <div className="form-section">
+          <div className="form-section-heading">
+            <span className="form-section-number">2</span>
+            <div>
+              <strong>Key Properties</strong>
+              <small>Specify how this attribute participates in keys.</small>
+            </div>
+          </div>
+
+          <div className="checkbox-grid">
+            <label className="checkbox-card compact">
+              <input
+                type="checkbox"
+                checked={isPrimaryKey}
+                onChange={(e) => setIsPrimaryKey(e.target.checked)}
+              />
+
+              <span className="checkbox-content">
+                <strong>Primary Key</strong>
+                <small>Uniquely identifies the entity.</small>
+              </span>
+            </label>
+
+            <label className="checkbox-card compact">
+              <input
+                type="checkbox"
+                checked={isPartialKey}
+                onChange={(e) => setIsPartialKey(e.target.checked)}
+              />
+
+              <span className="checkbox-content">
+                <strong>Partial Key</strong>
+                <small>Used to identify a weak entity.</small>
+              </span>
+            </label>
+          </div>
+        </div>
 
         <div className="modal-actions">
-          <button type="submit">Save</button>
-
-          <button type="button" onClick={onClose}>
+          <button type="button" className="modal-cancel-btn" onClick={onClose}>
             Cancel
+          </button>
+
+          <button type="submit" className="modal-save-btn">
+            Save Changes
           </button>
         </div>
       </form>
@@ -197,29 +261,56 @@ export function AttributeEditForm({ attribute, onSave, onClose }) {
 
 function RelationshipAttributeRow({ attribute, onChange, onDelete }) {
   return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: "6px",
-        padding: "8px",
-        marginBottom: "8px",
-      }}
-    >
-      <label style={{ marginBottom: "8px" }}>
-        Name
-        <input
-          value={attribute.name}
-          onChange={(e) =>
-            onChange({
-              ...attribute,
-              name: e.target.value,
-            })
-          }
-        />
-      </label>
+    <div className="relationship-attribute-card">
+      <div className="relationship-attribute-header">
+        <strong>Relationship Attribute</strong>
 
-      <label style={{ marginBottom: "8px" }}>
-        Attribute Type
+        <button
+          type="button"
+          className="relationship-delete-btn"
+          onClick={onDelete}
+        >
+          Delete
+        </button>
+      </div>
+
+      <div className="form-grid">
+        <label className="form-label">
+          <span>Name</span>
+          <input
+            value={attribute.name}
+            onChange={(e) =>
+              onChange({
+                ...attribute,
+                name: e.target.value,
+              })
+            }
+            placeholder="Attribute name"
+          />
+        </label>
+
+        <label className="form-label">
+          <span>Data Type</span>
+          <select
+            value={attribute.dataType}
+            onChange={(e) =>
+              onChange({
+                ...attribute,
+                dataType: e.target.value,
+              })
+            }
+          >
+            <option value="string">String</option>
+            <option value="integer">Integer</option>
+            <option value="float">Float</option>
+            <option value="date">Date</option>
+            <option value="boolean">Boolean</option>
+          </select>
+        </label>
+      </div>
+
+      <label className="form-label">
+        <span>Attribute Type</span>
         <select
           value={attribute.type}
           onChange={(e) =>
@@ -235,40 +326,6 @@ function RelationshipAttributeRow({ attribute, onChange, onDelete }) {
           <option value="derived">Derived</option>
         </select>
       </label>
-
-      <label style={{ marginBottom: "8px" }}>
-        Data Type
-        <select
-          value={attribute.dataType}
-          onChange={(e) =>
-            onChange({
-              ...attribute,
-              dataType: e.target.value,
-            })
-          }
-        >
-          <option value="string">String</option>
-          <option value="integer">Integer</option>
-          <option value="float">Float</option>
-          <option value="date">Date</option>
-          <option value="boolean">Boolean</option>
-        </select>
-      </label>
-
-      <button
-        type="button"
-        onClick={onDelete}
-        style={{
-          padding: "5px 10px",
-          border: "none",
-          borderRadius: "5px",
-          background: "#ef4444",
-          color: "white",
-          cursor: "pointer",
-        }}
-      >
-        Delete Attribute
-      </button>
     </div>
   );
 }
@@ -284,17 +341,12 @@ export function RelationshipEditForm({
   onClose,
 }) {
   const [name, setName] = useState(relationship.name);
-
   const [cardinality, setCardinality] = useState(relationship.cardinality);
 
   const [participation, setParticipation] = useState(
     relationship.participation || {},
   );
 
-  // IMPORTANT:
-  // Relationship attributes are kept locally while
-  // the modal is open. They are written to the model
-  // only when the user presses the main Save button.
   const [attributes, setAttributes] = useState(relationship.attributes || []);
 
   function handleParticipationChange(entityId, value) {
@@ -307,17 +359,11 @@ export function RelationshipEditForm({
   function addNewRelationshipAttribute() {
     const newAttribute = {
       id: `rattr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-
       name: "NewAttribute",
-
       type: "simple",
-
       dataType: "string",
-
       isPrimaryKey: false,
-
       isPartialKey: false,
-
       components: [],
     };
 
@@ -344,18 +390,14 @@ export function RelationshipEditForm({
     const cleanedAttributes = attributes.map((attribute) => ({
       ...attribute,
       name: attribute.name.trim() || "NewAttribute",
-
       components:
         attribute.type === "composite" ? attribute.components || [] : [],
     }));
 
     onSave({
       name: name.trim() || relationship.name,
-
       cardinality,
-
       participation,
-
       attributes: cleanedAttributes,
     });
 
@@ -364,113 +406,122 @@ export function RelationshipEditForm({
 
   return (
     <Modal title="Edit Relationship" onClose={onClose}>
-      <form onSubmit={handleSubmit}>
-        {/* NAME */}
+      <form onSubmit={handleSubmit} className="modal-form">
+        <div className="form-section">
+          <div className="form-section-heading">
+            <span className="form-section-number">1</span>
+            <div>
+              <strong>Relationship Details</strong>
+              <small>Define how the connected entities interact.</small>
+            </div>
+          </div>
 
-        <label>
-          Name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-          />
-        </label>
+          <label className="form-label">
+            <span>Name</span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoFocus
+              placeholder="Enter relationship name"
+            />
+          </label>
 
-        {/* CARDINALITY */}
+          <label className="form-label">
+            <span>Cardinality</span>
+            <select
+              value={cardinality}
+              onChange={(e) => setCardinality(e.target.value)}
+            >
+              <option value="1:1">1:1</option>
+              <option value="1:N">1:N</option>
+              <option value="N:1">N:1</option>
+              <option value="M:N">M:N</option>
+            </select>
+          </label>
+        </div>
 
-        <label>
-          Cardinality
-          <select
-            value={cardinality}
-            onChange={(e) => setCardinality(e.target.value)}
-          >
-            <option value="1:1">1:1</option>
-            <option value="1:N">1:N</option>
-            <option value="N:1">N:1</option>
-            <option value="M:N">M:N</option>
-          </select>
-        </label>
+        <div className="form-section">
+          <div className="form-section-heading">
+            <span className="form-section-number">2</span>
+            <div>
+              <strong>Participation</strong>
+              <small>Choose total or partial participation for each entity.</small>
+            </div>
+          </div>
 
-        {/* PARTICIPATION */}
+          <div className="participation-list">
+            {relationship.entities.map((entityId) => {
+              const entity = entities.find((item) => item.id === entityId);
 
-        <fieldset className="participation-fieldset">
-          <legend>Participation</legend>
+              return (
+                <div key={entityId} className="participation-row">
+                  <div>
+                    <strong>{entity ? entity.name : entityId}</strong>
+                    <small>Participation constraint</small>
+                  </div>
 
-          {relationship.entities.map((entityId) => {
-            const entity = entities.find((item) => item.id === entityId);
+                  <select
+                    value={participation[entityId] || "partial"}
+                    onChange={(e) =>
+                      handleParticipationChange(entityId, e.target.value)
+                    }
+                  >
+                    <option value="total">Total</option>
+                    <option value="partial">Partial</option>
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-            return (
-              <label key={entityId} className="participation-row">
-                <span>{entity ? entity.name : entityId}</span>
-
-                <select
-                  value={participation[entityId] || "partial"}
-                  onChange={(e) =>
-                    handleParticipationChange(entityId, e.target.value)
-                  }
-                >
-                  <option value="total">Total</option>
-
-                  <option value="partial">Partial</option>
-                </select>
-              </label>
-            );
-          })}
-        </fieldset>
-
-        {/* RELATIONSHIP ATTRIBUTES */}
-
-        <fieldset className="participation-fieldset">
-          <legend>Relationship Attributes</legend>
+        <div className="form-section">
+          <div className="form-section-heading">
+            <span className="form-section-number">3</span>
+            <div>
+              <strong>Relationship Attributes</strong>
+              <small>
+                Add attributes that belong to this relationship.
+              </small>
+            </div>
+          </div>
 
           {attributes.length === 0 ? (
-            <p
-              style={{
-                margin: "4px 0 10px",
-                fontSize: "12px",
-                color: "#6b7280",
-              }}
-            >
-              No relationship attributes.
-            </p>
+            <div className="empty-attributes">
+              <span>No relationship attributes yet.</span>
+            </div>
           ) : (
-            attributes.map((attribute) => (
-              <RelationshipAttributeRow
-                key={attribute.id}
-                attribute={attribute}
-                onChange={(updated) =>
-                  updateRelationshipAttribute(attribute.id, updated)
-                }
-                onDelete={() => deleteRelationshipAttribute(attribute.id)}
-              />
-            ))
+            <div className="relationship-attributes">
+              {attributes.map((attribute) => (
+                <RelationshipAttributeRow
+                  key={attribute.id}
+                  attribute={attribute}
+                  onChange={(updated) =>
+                    updateRelationshipAttribute(attribute.id, updated)
+                  }
+                  onDelete={() => deleteRelationshipAttribute(attribute.id)}
+                />
+              ))}
+            </div>
           )}
 
           <button
             type="button"
+            className="add-relationship-attribute-btn"
             onClick={addNewRelationshipAttribute}
-            style={{
-              width: "100%",
-              padding: "8px",
-              border: "1px solid #d1d5db",
-              borderRadius: "6px",
-              background: "#f9fafb",
-              cursor: "pointer",
-              fontSize: "13px",
-            }}
           >
             + Add Relationship Attribute
           </button>
-        </fieldset>
-
-        {/* MAIN ACTIONS */}
+        </div>
 
         <div className="modal-actions">
-          <button type="submit">Save</button>
-
-          <button type="button" onClick={onClose}>
+          <button type="button" className="modal-cancel-btn" onClick={onClose}>
             Cancel
+          </button>
+
+          <button type="submit" className="modal-save-btn">
+            Save Changes
           </button>
         </div>
       </form>

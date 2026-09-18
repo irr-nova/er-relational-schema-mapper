@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
@@ -14,12 +18,14 @@ button {
   cursor: pointer;
 }
 
-/* Main App */
 .app {
   min-height: 100vh;
 }
 
-/* Navigation */
+/* =========================
+   Navigation
+   ========================= */
+
 .navbar {
   height: 72px;
   padding: 0 7%;
@@ -67,14 +73,27 @@ button {
   font-size: 18px !important;
 }
 
-/* Hero */
+/* =========================
+   Hero
+   ========================= */
+
 .hero-section {
+  min-height: 520px;
   padding: 90px 7%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
   background: linear-gradient(135deg, #eef2ff, #ffffff);
 }
 
 .hero-content {
-  max-width: 850px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tag {
@@ -86,10 +105,11 @@ button {
 }
 
 .hero-content h1 {
+  color: #172033;
   font-size: 58px;
   line-height: 1.05;
   margin: 0;
-  max-width: 800px;
+  max-width: 850px;
 }
 
 .hero-content h1 span {
@@ -97,26 +117,34 @@ button {
 }
 
 .description {
-  max-width: 650px;
+  max-width: 680px;
   color: #64748b;
   font-size: 18px;
   line-height: 1.7;
-  margin: 25px 0;
+  margin: 25px auto;
 }
 
 .hero-buttons {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 15px;
   margin-top: 30px;
+  flex-wrap: wrap;
 }
 
-/* Buttons */
+/* =========================
+   Buttons
+   ========================= */
+
 .primary-btn,
 .secondary-btn {
   padding: 13px 20px;
   border-radius: 9px;
   font-size: 14px;
   font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .primary-btn {
@@ -139,7 +167,10 @@ button {
   background: #f1f5f9;
 }
 
-/* Sections */
+/* =========================
+   Sections
+   ========================= */
+
 .schema-section,
 .steps-section {
   padding: 80px 7%;
@@ -158,7 +189,10 @@ button {
   color: #64748b;
 }
 
-/* Schema Cards */
+/* =========================
+   Schema Cards
+   ========================= */
+
 .schema-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -212,7 +246,10 @@ button {
   font-size: 13px;
 }
 
-/* Mapping Steps */
+/* =========================
+   Mapping Steps
+   ========================= */
+
 .steps-section {
   background: white;
 }
@@ -243,6 +280,7 @@ button {
 .step h3 {
   margin: 3px 0 8px;
   font-size: 17px;
+  color: #172033;
 }
 
 .step p {
@@ -251,7 +289,10 @@ button {
   line-height: 1.6;
 }
 
-/* Action Buttons */
+/* =========================
+   Action Buttons
+   ========================= */
+
 .actions {
   padding: 70px 7%;
   display: flex;
@@ -262,7 +303,10 @@ button {
   text-align: center;
 }
 
-/* Footer */
+/* =========================
+   Footer
+   ========================= */
+
 footer {
   padding: 30px 7%;
   background: #172033;
@@ -274,7 +318,10 @@ footer p {
   margin: 5px 0;
 }
 
-/* SQL Output */
+/* =========================
+   SQL Output
+   ========================= */
+
 #sql-output {
   scroll-margin-top: 80px;
 }
@@ -284,12 +331,17 @@ footer p {
   line-height: 1.6;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* =========================
+   Mapping Explanation
+   ========================= */
+
+#explanation {
+  scroll-margin-top: 90px;
 }
 
-/* Day / Night Mode */
+/* =========================
+   Dark Mode
+   ========================= */
 
 body.dark-mode {
   background: #111827;
@@ -319,11 +371,11 @@ body.dark-mode .hero-section {
   background: linear-gradient(135deg, #1f2937, #111827);
 }
 
-body.dark-mode .hero-section h1 {
+body.dark-mode .hero-content h1 {
   color: #f9fafb;
 }
 
-body.dark-mode .hero-section h1 span {
+body.dark-mode .hero-content h1 span {
   color: #818cf8;
 }
 
@@ -372,6 +424,10 @@ body.dark-mode .step {
   border-bottom-color: #374151;
 }
 
+body.dark-mode .step h3 {
+  color: #f9fafb;
+}
+
 body.dark-mode .step p {
   color: #d1d5db;
 }
@@ -396,7 +452,10 @@ body.dark-mode footer {
   color: #d1d5db;
 }
 
-/* Responsive */
+/* =========================
+   Responsive
+   ========================= */
+
 @media (max-width: 900px) {
   .navbar {
     padding: 0 4%;
@@ -412,6 +471,7 @@ body.dark-mode footer {
   }
 
   .hero-section {
+    min-height: 480px;
     padding: 70px 5%;
   }
 
@@ -442,6 +502,11 @@ body.dark-mode footer {
     justify-content: center;
   }
 
+  .hero-section {
+    min-height: 450px;
+    padding: 60px 5%;
+  }
+
   .hero-content h1 {
     font-size: 38px;
   }
@@ -454,67 +519,14 @@ body.dark-mode footer {
   .actions {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    max-width: 320px;
   }
 
   .hero-buttons button,
+  .hero-buttons a,
   .actions button {
     width: 100%;
+    text-align: center;
   }
-}
-/* Heading visibility fix */
-.heading-main {
-  color: #172033;
-}
-
-body.dark-mode .heading-main {
-  color: #f9fafb;
-}
-
-.primary-btn,
-.secondary-btn {
-  text-decoration: none;
-  display: inline-block;
-}
-
-/* Light-mode hero heading visibility fix */
-.hero-content h1 {
-  color: #172033;
-}
-
-.hero-content h1 span {
-  color: #4f46e5;
-}
-
-/* Light-mode steps heading visibility */
-.steps-section .section-heading h2,
-.steps-section .step h3 {
-  color: #172033;
-}
-
-/* Dark-mode steps heading visibility */
-body.dark-mode .steps-section .section-heading h2,
-body.dark-mode .steps-section .step h3 {
-  color: #f9fafb;
-}
-
-/* ER Builder button */
-.hero-buttons {
-  flex-wrap: wrap;
-}
-
-/* Mapping explanation scroll target */
-#explanation {
-  scroll-margin-top: 90px;
-}
-
-/* Light-mode mapping explanation visibility */
-.steps-section .section-heading h2,
-.steps-section .step h3 {
-  color: #172033;
-}
-
-/* Dark-mode mapping explanation visibility */
-body.dark-mode .steps-section .section-heading h2,
-body.dark-mode .steps-section .step h3 {
-  color: #f9fafb;
 }
