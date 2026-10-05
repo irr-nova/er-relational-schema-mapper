@@ -1,244 +1,227 @@
-* {
-  box-sizing: border-box;
+/* ================================
+   DARK MODE
+================================ */
+
+.app.dark-mode {
+  background: #111827;
+  color: #f9fafb;
 }
 
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f5f7fb;
-  color: #172033;
+/* Navbar */
+.app.dark-mode .navbar {
+  background: #111827;
+  border-bottom: 1px solid #374151;
 }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
+.app.dark-mode .logo {
+  color: #f9fafb;
 }
 
-/* Main App */
-.app {
-  min-height: 100vh;
+.app.dark-mode .logo span {
+  color: #818cf8;
 }
 
-/* Navigation */
-.navbar {
-  height: 72px;
-  padding: 0 7%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+.app.dark-mode .nav-links button {
+  color: #e5e7eb;
 }
 
-.logo {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 1px;
+.app.dark-mode .nav-links button:hover {
+  color: #818cf8;
 }
 
-.logo span {
-  font-weight: 400;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.nav-links button {
-  border: none;
-  background: transparent;
-  padding: 10px 14px;
-  color: #4b5563;
-  font-size: 14px;
-  border-radius: 8px;
-}
-
-.nav-links button:hover {
-  background: #eef2ff;
-  color: #3346b8;
-}
-
-.theme-btn {
-  font-size: 18px !important;
+.app.dark-mode .theme-btn {
+  background: #1f2937;
+  border: 1px solid #4b5563;
 }
 
 /* Hero */
-.hero-section {
-  padding: 90px 7%;
-  background: linear-gradient(135deg, #eef2ff, #ffffff);
+.app.dark-mode .hero-section {
+  background: #111827;
 }
 
-.hero-content {
-  max-width: 850px;
+.app.dark-mode .hero-section h1 {
+  color: #f9fafb;
 }
 
-.tag {
-  color: #4f46e5;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  margin-bottom: 15px;
+.app.dark-mode .hero-section h1 span {
+  color: #818cf8;
 }
 
-.hero-content h1 {
-  font-size: 58px;
-  line-height: 1.05;
-  margin: 0;
-  max-width: 800px;
+.app.dark-mode .hero-section .description {
+  color: #d1d5db;
 }
 
-.hero-content h1 span {
-  color: #4f46e5;
+.app.dark-mode .tag {
+  color: #818cf8;
 }
 
-.description {
-  max-width: 650px;
-  color: #64748b;
-  font-size: 18px;
-  line-height: 1.7;
-  margin: 25px 0;
+/* Sections */
+.app.dark-mode .schema-section,
+.app.dark-mode .steps-section {
+  background: #111827;
 }
 
-.hero-buttons {
-  display: flex;
-  gap: 15px;
-  margin-top: 30px;
+.app.dark-mode .section-heading h2 {
+  color: #f9fafb;
+}
+
+.app.dark-mode .section-heading p {
+  color: #d1d5db;
+}
+
+/* Cards */
+.app.dark-mode .schema-card {
+  background: #1f2937;
+  border: 1px solid #374151;
+  color: #f9fafb;
+}
+
+.app.dark-mode .schema-card h3 {
+  color: #f9fafb;
+}
+
+.app.dark-mode .schema-card p {
+  color: #d1d5db;
+}
+
+/* Attributes */
+.app.dark-mode .attribute {
+  background: #111827;
+  border: 1px solid #374151;
+  color: #f9fafb;
+}
+
+.app.dark-mode .attribute small {
+  color: #9ca3af;
+}
+
+.app.dark-mode .reference-text {
+  color: #a5b4fc;
+}
+
+/* Card title */
+.app.dark-mode .card-title h3 {
+  color: #f9fafb;
+}
+
+.app.dark-mode .card-title span {
+  color: #9ca3af;
+}
+
+/* Mapping steps */
+.app.dark-mode .step {
+  background: #1f2937;
+  border: 1px solid #374151;
+}
+
+.app.dark-mode .step h3 {
+  color: #f9fafb;
+}
+
+.app.dark-mode .step p {
+  color: #d1d5db;
+}
+
+.app.dark-mode .step-number {
+  color: #818cf8;
 }
 
 /* Buttons */
-.primary-btn,
-.secondary-btn {
-  padding: 13px 20px;
-  border-radius: 9px;
-  font-size: 14px;
-  font-weight: 600;
+.app.dark-mode .secondary-btn {
+  background: #1f2937;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
 }
 
-.primary-btn {
-  border: none;
+.app.dark-mode .secondary-btn:hover {
+  background: #374151;
+}
+
+.app.dark-mode .primary-btn {
   background: #4f46e5;
   color: white;
 }
 
-.primary-btn:hover {
-  background: #4338ca;
+.app.dark-mode .primary-btn:hover {
+  background: #6366f1;
 }
 
-.secondary-btn {
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #374151;
+/* SQL */
+.app.dark-mode .sql-box {
+  background: #0f172a;
+  border: 1px solid #374151;
 }
 
-.secondary-btn:hover {
-  background: #f1f5f9;
+.app.dark-mode .sql-box pre {
+  color: #e5e7eb;
 }
 
-/* Sections */
-.schema-section,
-.steps-section {
-  padding: 80px 7%;
+/* Learn */
+.app.dark-mode .learn-rules {
+  background: #1f2937;
 }
 
-.section-heading {
-  margin-bottom: 35px;
+.app.dark-mode .learn-rules li {
+  color: #d1d5db;
 }
 
-.section-heading h2 {
-  font-size: 36px;
-  margin: 5px 0 10px;
+.app.dark-mode .mapping-animation {
+  color: #f9fafb;
 }
 
-.section-heading p:last-child {
-  color: #64748b;
+.app.dark-mode .animation-box {
+  background: #111827;
+  border: 1px solid #4b5563;
 }
 
-/* Schema Cards */
-.schema-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+.app.dark-mode .animation-box strong {
+  color: #f9fafb;
 }
 
-.schema-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.05);
+.app.dark-mode .animation-box span,
+.app.dark-mode .animation-box small {
+  color: #9ca3af;
 }
 
-.card-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 15px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
+.app.dark-mode .animation-arrow {
+  color: #818cf8;
 }
 
-.card-title h3 {
-  margin: 0;
-  font-size: 17px;
+/* References */
+.app.dark-mode .reference-list li {
+  color: #d1d5db;
 }
 
-.card-title span {
-  font-size: 11px;
-  color: #64748b;
+.app.dark-mode .reference-list strong {
+  color: #f9fafb;
 }
 
-.attribute {
-  padding: 13px 8px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 14px;
+/* Practice / Help / Developed By */
+.app.dark-mode #practice .schema-card,
+.app.dark-mode #help .schema-card,
+.app.dark-mode #developed .schema-card {
+  background: #1f2937;
+  color: #f9fafb;
 }
 
-.attribute small {
-  float: right;
-  color: #94a3b8;
+/* Footer */
+.app.dark-mode footer {
+  background: #0f172a;
+  color: #d1d5db;
+  border-top: 1px solid #374151;
 }
 
-.attribute.primary {
-  font-weight: 600;
+/* Smooth transition */
+.app,
+.navbar,
+.schema-card,
+.step,
+.attribute,
+.hero-section,
+.secondary-btn,
+.sql-box {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
-
-.attribute.foreign {
-  color: #2563eb;
-  font-size: 13px;
-}
-
-/* Mapping Steps */
-.steps-section {
-  background: white;
-}
-
-.steps {
-  max-width: 850px;
-}
-
-.step {
-  display: flex;
-  gap: 20px;
-  padding: 22px 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.step-number {
-  min-width: 48px;
-  height: 48px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 50%;
-  background: #eef2ff;
-  color: #4f46e5;
-  font-weight: 700;
-}
-
-.step h3 {
-  margin: 3
