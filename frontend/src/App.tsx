@@ -1,1273 +1,2810 @@
-import { useState } from 'react'
-import './App.css'
+import { useEffect, useMemo, useState } from "react";
 
-type Attribute = {
-  name: string
-  type: string
-  primaryKey?: boolean
-  foreignKey?: boolean
-  references?: string
+import "./App.css";
+
+// @ts-expect-error ER Builder is a reusable JSX module.
+import ERBuilder from "./er-builder/ERBuilder.jsx";
+
+type Table = {
+  name: string;
+  columns: {
+    name: string;
+    dataType: string;
+  }[];
+  primaryKey: string[];
+  foreignKeys: {
+    column: string;
+    referencedTable: string;
+    referencedColumn: string;
+  }[];
+};
+
+type MappingRelationship = {
+  name: string;
+  type: string;
+  cardinality: string;
+  mapping: string;
+  table?: string;
+};
+
+type MappingResult = {
+  valid: boolean;
+  errors: string[];
+  relational_schema: {
+    tables: Table[];
+    relationships: MappingRelationship[];
+    explanations: string[];
+  } | null;
+  sql: string | null;
+};
+
+type PracticeQuestion = {
+  question: string;
+  options: string[];
+  answer: number;
+  explanation: string;
+  source: string;
+  topic: string;
+  difficulty: string;
+};
+
+function TeamPhoto({
+  src,
+  alt,
+  initials,
+}: {
+  src: string;
+  alt: string;
+  initials: string;
+}) {
+  return (
+    <div className="team-photo-wrap">
+      <img
+        src={src}
+        alt={alt}
+        className="team-photo"
+        onError={(event) => {
+          event.currentTarget.classList.add("photo-hidden");
+        }}
+      />
+      <div className="team-initials" aria-hidden="true">
+        {initials}
+      </div>
+    </div>
+  );
 }
 
-type Relation = {
-  name: string
-  attributes: Attribute[]
-}
 
-const relations: Relation[] = [
-  {
-    name: 'STUDENT',
-    attributes: [
-      { name: 'StudentID', type: 'INT', primaryKey: true },
-      { name: 'Name', type: 'VARCHAR(100)' },
-      { name: 'Email', type: 'VARCHAR(100)' },
-    ],
-  },
-  {
-    name: 'COURSE',
-    attributes: [
-      { name: 'CourseID', type: 'INT', primaryKey: true },
-      { name: 'CourseName', type: 'VARCHAR(100)' },
-    ],
-  },
-  {
-    name: 'ENROLLMENT',
-    attributes: [
-      {
-        name: 'StudentID',
-        type: 'INT',
-        primaryKey: true,
-        foreignKey: true,
-        references: 'STUDENT.StudentID',
-      },
-      {
-        name: 'CourseID',
-        type: 'INT',
-        primaryKey: true,
-        foreignKey: true,
-        references: 'COURSE.CourseID',
-      },
-    ],
-  },
-]
-
-const mappingSteps = [
-  'STUDENT is a strong entity and is mapped to the STUDENT relation.',
-  'COURSE is a strong entity and is mapped to the COURSE relation.',
-  'ENROLLS is an M:N relationship.',
-  'A separate ENROLLMENT relation is created.',
-  'StudentID and CourseID become foreign keys in ENROLLMENT.',
-  'StudentID and CourseID together form the composite primary key.',
-]
-
-const practiceQuestions = [
+const practiceQuestions: PracticeQuestion[] = [
   {
     question:
-      'Which type of relationship requires a separate relation when converting an ER diagram into a relational schema?',
+      "What does a strong entity normally become in the relational model?",
     options: [
-      '1:1 relationship',
-      '1:N relationship',
-      'M:N relationship',
-      'Simple attribute',
-    ],
-    answer: 2,
-  },
-  {
-    question:
-      'What does a primary key uniquely identify in a relation?',
-    options: [
-      'A tuple',
-      'A database',
-      'A relationship only',
-      'A column type',
+      "A relation/table",
+      "A foreign key only",
+      "A database trigger",
+      "A view only",
     ],
     answer: 0,
+    explanation:
+      "A strong entity is normally mapped to a relation containing its attributes and primary key.",
+    source: "General DBMS",
+    topic: "ER Model",
+    difficulty: "Easy",
   },
+
   {
     question:
-      'In a 1:N relationship, where is the primary key of the 1-side normally placed?',
+      "What is normally created for an M:N relationship?",
     options: [
-      'As a foreign key in the N-side relation',
-      'As a new table always',
-      'As a multivalued attribute',
-      'It is deleted',
+      "A separate relation",
+      "Only a new attribute",
+      "A database index",
+      "A view",
     ],
     answer: 0,
+    explanation:
+      "An M:N relationship is normally represented by a separate relation containing foreign keys referencing the participating entities.",
+    source: "General DBMS",
+    topic: "ER → Relational Mapping",
+    difficulty: "Easy",
   },
+
   {
-    question:
-      'Which attribute can be divided into smaller component attributes?',
+    question: "What does PK stand for?",
     options: [
-      'Simple attribute',
-      'Derived attribute',
-      'Composite attribute',
-      'Foreign key',
-    ],
-    answer: 2,
-  },
-  {
-    question:
-      'What is commonly created for a multivalued attribute?',
-    options: [
-      'A separate relation',
-      'A derived attribute',
-      'A foreign key only',
-      'Nothing',
+      "Primary Key",
+      "Private Key",
+      "Parent Key",
+      "Partial Key",
     ],
     answer: 0,
+    explanation: "PK means Primary Key.",
+    source: "General DBMS",
+    topic: "Keys",
+    difficulty: "Easy",
   },
-]
 
-function generateSQL() {
-  return `CREATE TABLE STUDENT (
-    StudentID INT PRIMARY KEY,
-    Name VARCHAR(100),
-    Email VARCHAR(100)
-);
+  {
+    question: "What does FK stand for?",
+    options: [
+      "Foreign Key",
+      "Final Key",
+      "First Key",
+      "File Key",
+    ],
+    answer: 0,
+    explanation: "FK means Foreign Key.",
+    source: "General DBMS",
+    topic: "Keys",
+    difficulty: "Easy",
+  },
 
-CREATE TABLE COURSE (
-    CourseID INT PRIMARY KEY,
-    CourseName VARCHAR(100)
-);
+  {
+    question:
+      "Which relationship cardinality normally requires a separate relation?",
+    options: ["M:N", "Only 1:1", "Only 1:N", "None"],
+    answer: 0,
+    explanation:
+      "An M:N relationship is normally mapped using a separate relation containing the keys of the participating entities.",
+    source: "General DBMS",
+    topic: "Cardinality",
+    difficulty: "Easy",
+  },
 
-CREATE TABLE ENROLLMENT (
-    StudentID INT,
-    CourseID INT,
-    PRIMARY KEY (StudentID, CourseID),
-    FOREIGN KEY (StudentID) REFERENCES STUDENT(StudentID),
-    FOREIGN KEY (CourseID) REFERENCES COURSE(CourseID)
-);`
-}
+  {
+    question:
+      "Which attribute type can be divided into smaller meaningful components?",
+    options: [
+      "Composite attribute",
+      "Derived attribute",
+      "Simple attribute",
+      "Primary key",
+    ],
+    answer: 0,
+    explanation:
+      "A composite attribute can be divided into smaller meaningful component attributes, such as Address into Street, City and PIN.",
+    source: "General DBMS",
+    topic: "Attributes",
+    difficulty: "Easy",
+  },
+
+  {
+    question:
+      "Which attribute may have multiple values for a single entity?",
+    options: [
+      "Multivalued attribute",
+      "Simple attribute",
+      "Derived attribute",
+      "Primary key",
+    ],
+    answer: 0,
+    explanation:
+      "A multivalued attribute can have more than one value for an entity, such as multiple phone numbers.",
+    source: "General DBMS",
+    topic: "Attributes",
+    difficulty: "Easy",
+  },
+
+  {
+    question:
+      "Where is the primary key of the 1-side normally placed in a 1:N relationship?",
+    options: [
+      "As a foreign key in the N-side relation",
+      "As a new database",
+      "Only in the 1-side relation",
+      "As a view",
+    ],
+    answer: 0,
+    explanation:
+      "For a 1:N relationship, the primary key of the 1-side is normally added as a foreign key to the N-side relation.",
+    source: "General DBMS",
+    topic: "ER → Relational Mapping",
+    difficulty: "Medium",
+  },
+
+  {
+    question:
+      "What is commonly used together with an owner key to identify a weak entity?",
+    options: [
+      "Partial key",
+      "View key",
+      "Derived key",
+      "Index key",
+    ],
+    answer: 0,
+    explanation:
+      "A weak entity uses a partial key together with the owner's primary key for identification.",
+    source: "General DBMS",
+    topic: "Weak Entity",
+    difficulty: "Medium",
+  },
+
+  {
+    question:
+      "What does a foreign key primarily help maintain between relations?",
+    options: [
+      "Referential integrity",
+      "Screen resolution",
+      "Sorting order",
+      "File compression",
+    ],
+    answer: 0,
+    explanation:
+      "A foreign key references a key in another relation and helps maintain referential integrity.",
+    source: "General DBMS",
+    topic: "Keys",
+    difficulty: "Medium",
+  },
+];
 
 function App() {
-  const [showSQL, setShowSQL] = useState(false)
-  const [showExplanation, setShowExplanation] = useState(false)
+  const [darkMode, setDarkMode] = useState(false);
 
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('darkMode') === 'true'
-  })
+  const [showSql, setShowSql] = useState(false);
 
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [score, setScore] = useState(0)
-  const [answerChecked, setAnswerChecked] = useState(false)
-  const [showResult, setShowResult] = useState(false)
+  const [showExplanation, setShowExplanation] =
+    useState(false);
 
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
-  }
+  const [showERBuilder, setShowERBuilder] =
+    useState(false);
 
-  const toggleDarkMode = () => {
-    const newMode = !darkMode
-    setDarkMode(newMode)
-    localStorage.setItem('darkMode', String(newMode))
-  }
+  const [mappingResult, setMappingResult] =
+    useState<MappingResult | null>(null);
 
-  const copySQL = async () => {
-    try {
-      await navigator.clipboard.writeText(generateSQL())
-      alert('SQL copied to clipboard!')
-    } catch {
-      alert('Unable to copy SQL.')
+  const [loading, setLoading] = useState(true);
+
+  const [practiceAnswers, setPracticeAnswers] =
+    useState<Record<number, number>>({});
+
+  const [practiceSubmitted, setPracticeSubmitted] =
+    useState(false);
+
+  const [questionSource, setQuestionSource] =
+    useState("All Sources");
+
+  const [questionTopic, setQuestionTopic] =
+    useState("All Topics");
+
+  const [questionDifficulty, setQuestionDifficulty] =
+    useState("All Difficulties");
+
+  const [questionSearch, setQuestionSearch] =
+    useState("");
+
+  useEffect(() => {
+    document.body.classList.toggle(
+      "dark-mode",
+      darkMode,
+    );
+  }, [darkMode]);
+
+  useEffect(() => {
+    async function loadLatestMapping() {
+      try {
+        const response = await fetch(
+          "http://127.0.0.1:8000/latest",
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Could not load the latest mapping.",
+          );
+        }
+
+        const result: MappingResult =
+          await response.json();
+
+        if (result.valid) {
+          setMappingResult(result);
+        }
+      } catch (error) {
+        console.error(
+          "Could not load latest mapping:",
+          error,
+        );
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  const downloadReport = () => {
-    const generatedAt = new Date().toLocaleString()
+    loadLatestMapping();
+  }, []);
 
-    const report = `
-ER DIAGRAM TO RELATIONAL SCHEMA MAPPER
-======================================
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
-GENERATED REPORT
-================
+  const downloadFile = (
+    filename: string,
+    content: string,
+  ) => {
+    const blob = new Blob([content], {
+      type: "text/plain;charset=utf-8",
+    });
 
-Generated on: ${generatedAt}
+    const url = URL.createObjectURL(blob);
 
+    const link = document.createElement("a");
 
-1. PROJECT OVERVIEW
-===================
+    link.href = url;
+    link.download = filename;
 
-This report documents the conversion of an Entity-Relationship
-(ER) model into a relational database schema.
+    document.body.appendChild(link);
 
-The report contains the input ER model, processing steps,
-intermediate mapping results, final relational schema,
-validation checks, and generated SQL.
+    link.click();
 
+    document.body.removeChild(link);
 
-2. INPUT ER MODEL
-=================
+    URL.revokeObjectURL(url);
+  };
 
-ENTITY 1: STUDENT
------------------
+  const activeTables =
+    mappingResult?.relational_schema?.tables ?? [];
 
-Attributes:
-- StudentID : INT [PRIMARY KEY]
-- Name      : VARCHAR(100)
-- Email     : VARCHAR(100)
+  const activeSql = mappingResult?.sql ?? "";
 
+  const activeExplanations =
+    mappingResult?.relational_schema?.explanations ??
+    [];
 
-ENTITY 2: COURSE
+  const activeRelationships =
+    mappingResult?.relational_schema?.relationships ??
+    [];
+
+  const hasMapping =
+    mappingResult?.valid === true &&
+    activeTables.length > 0;
+
+  const filteredQuestions = useMemo(() => {
+    return practiceQuestions.filter((question) => {
+      const sourceMatch =
+        questionSource === "All Sources" ||
+        question.source === questionSource;
+
+      const topicMatch =
+        questionTopic === "All Topics" ||
+        question.topic === questionTopic;
+
+      const difficultyMatch =
+        questionDifficulty === "All Difficulties" ||
+        question.difficulty === questionDifficulty;
+
+      const searchValue =
+        questionSearch.trim().toLowerCase();
+
+      const searchMatch =
+        searchValue === "" ||
+        question.question
+          .toLowerCase()
+          .includes(searchValue) ||
+        question.topic
+          .toLowerCase()
+          .includes(searchValue) ||
+        question.source
+          .toLowerCase()
+          .includes(searchValue);
+
+      return (
+        sourceMatch &&
+        topicMatch &&
+        difficultyMatch &&
+        searchMatch
+      );
+    });
+  }, [
+    questionSource,
+    questionTopic,
+    questionDifficulty,
+    questionSearch,
+  ]);
+
+  const handleOpenERBuilder = () => {
+    setShowERBuilder(true);
+
+    setTimeout(() => {
+      scrollTo("er-builder-section");
+    }, 100);
+  };
+
+  const handleGenerateSchema = () => {
+    if (hasMapping) {
+      scrollTo("schema");
+    } else {
+      handleOpenERBuilder();
+    }
+  };
+
+  const handleMappingGenerated = (
+    result: MappingResult,
+  ) => {
+    setMappingResult(result);
+
+    setLoading(false);
+
+    setShowERBuilder(false);
+
+    setShowSql(false);
+
+    setShowExplanation(false);
+
+    setTimeout(() => {
+      scrollTo("schema");
+    }, 100);
+  };
+
+  const handleGenerateSQL = () => {
+    if (!hasMapping || !activeSql) {
+      return;
+    }
+
+    setShowSql(true);
+
+    setTimeout(() => {
+      scrollTo("sql-output");
+    }, 100);
+  };
+
+  const handleDownloadReport = () => {
+    if (!hasMapping) {
+      return;
+    }
+
+    const schemaText = activeTables
+      .map((table) => {
+        const columnsText = table.columns
+          .map((column) => {
+            const isPrimary =
+              table.primaryKey.includes(
+                column.name,
+              );
+
+            const foreignKey =
+              table.foreignKeys.find(
+                (foreign) =>
+                  foreign.column ===
+                  column.name,
+              );
+
+            let line = `- ${column.name} : ${column.dataType}`;
+
+            if (isPrimary) {
+              line += " (Primary Key)";
+            }
+
+            if (foreignKey) {
+              line += ` (Foreign Key -> ${foreignKey.referencedTable}.${foreignKey.referencedColumn})`;
+            }
+
+            return line;
+          })
+          .join("\n");
+
+        return `${table.name}\n${columnsText}`;
+      })
+      .join("\n\n");
+
+    const explanationText =
+      activeExplanations
+        .map(
+          (explanation, index) =>
+            `${index + 1}. ${explanation}`,
+        )
+        .join("\n");
+
+    const relationshipText =
+      activeRelationships
+        .map(
+          (relationship, index) =>
+            `${index + 1}. ${relationship.name} - ${relationship.cardinality} - ${relationship.mapping}`,
+        )
+        .join("\n");
+
+    const report = `ER DIAGRAM TO RELATIONAL SCHEMA MAPPER
+==================================================
+
+PROJECT OVERVIEW
 ----------------
+This application converts an Entity-Relationship diagram
+into a structured relational database schema.
 
-Attributes:
-- CourseID   : INT [PRIMARY KEY]
-- CourseName : VARCHAR(100)
+INPUT
+-----
+The ER model is created using the integrated ER Diagram Builder.
 
-
-RELATIONSHIP: ENROLLS
----------------------
-
-Participating Entities:
-- STUDENT
-- COURSE
-
-Cardinality:
-- M:N (Many-to-Many)
-
-
-3. PROCESSING / MAPPING
-=======================
-
-STEP 1 - Identify Strong Entities
-----------------------------------
-
-STUDENT and COURSE are identified as strong entities.
-Each strong entity is mapped to its own relation.
-
-
-STEP 2 - Convert Entity Attributes
------------------------------------
-
-The attributes of STUDENT are converted into columns
-of the STUDENT relation.
-
-The attributes of COURSE are converted into columns
-of the COURSE relation.
-
-
-STEP 3 - Identify Primary Keys
-------------------------------
-
-StudentID is selected as the primary key of STUDENT.
-
-CourseID is selected as the primary key of COURSE.
-
-
-STEP 4 - Identify Relationship Cardinality
-------------------------------------------
-
-The ENROLLS relationship is identified as an M:N
-(Many-to-Many) relationship between STUDENT and COURSE.
-
-
-STEP 5 - Create a Separate Relationship Relation
-------------------------------------------------
-
-Because ENROLLS is an M:N relationship, a separate
-relation named ENROLLMENT is created.
-
-
-STEP 6 - Add Foreign Keys
--------------------------
-
-StudentID from STUDENT is added to ENROLLMENT as a
-foreign key.
-
-CourseID from COURSE is added to ENROLLMENT as a
-foreign key.
-
-
-STEP 7 - Create Composite Primary Key
--------------------------------------
-
-StudentID and CourseID together form the composite
-primary key of ENROLLMENT.
-
-
-4. INTERMEDIATE MAPPING RESULTS
-===============================
-
-INTERMEDIATE RESULT 1
----------------------
-
-STUDENT Entity
-       |
-       v
-STUDENT Relation
-
-Columns:
-- StudentID
-- Name
-- Email
-
-Primary Key:
-- StudentID
-
-
-INTERMEDIATE RESULT 2
----------------------
-
-COURSE Entity
-       |
-       v
-COURSE Relation
-
-Columns:
-- CourseID
-- CourseName
-
-Primary Key:
-- CourseID
-
-
-INTERMEDIATE RESULT 3
----------------------
-
-ENROLLS Relationship
-       |
-       | M:N
-       v
-ENROLLMENT Relation
-
-Columns:
-- StudentID
-- CourseID
-
-Foreign Keys:
-- StudentID -> STUDENT.StudentID
-- CourseID -> COURSE.CourseID
-
-Composite Primary Key:
-- (StudentID, CourseID)
-
-
-5. FINAL RELATIONAL SCHEMA
-==========================
-
-RELATION: STUDENT
+RELATIONAL SCHEMA
 -----------------
+${schemaText}
 
-StudentID INT PRIMARY KEY
-Name VARCHAR(100)
-Email VARCHAR(100)
-
-
-RELATION: COURSE
-----------------
-
-CourseID INT PRIMARY KEY
-CourseName VARCHAR(100)
-
-
-RELATION: ENROLLMENT
+RELATIONSHIP MAPPING
 --------------------
+${
+  relationshipText ||
+  "No relationship information available."
+}
 
-StudentID INT PRIMARY KEY, FOREIGN KEY
-References: STUDENT.StudentID
+PROCESSING / MAPPING STEPS
+---------------------------
+${
+  explanationText ||
+  "No mapping explanation available."
+}
 
-CourseID INT PRIMARY KEY, FOREIGN KEY
-References: COURSE.CourseID
+GENERATED SQL
+-------------
+${activeSql}
 
-Composite Primary Key:
-(StudentID, CourseID)
+FINAL OUTPUT INTERPRETATION
+---------------------------
+The ER model has been converted into relational tables.
+Primary keys identify records and foreign keys maintain
+relationships between tables.
 
+VALIDATION
+----------
+Mapping valid: ${
+      mappingResult.valid ? "YES" : "NO"
+    }
 
-6. MAPPING SUMMARY
-===================
-
-Entities mapped: 2
-Relationships mapped: 1
-Relations generated: 3
-Primary keys generated: 3
-Foreign keys generated: 2
-
-Relationship handled:
-- ENROLLS : M:N
-
-
-7. VALIDATION CHECKS
-====================
-
-Check 1:
-All strong entities have corresponding relations.
-Result: PASS
-
-Check 2:
-STUDENT has a valid primary key.
-Result: PASS
-
-Check 3:
-COURSE has a valid primary key.
-Result: PASS
-
-Check 4:
-M:N relationship has been converted into a separate relation.
-Result: PASS
-
-Check 5:
-ENROLLMENT contains the required foreign keys.
-Result: PASS
-
-Check 6:
-Foreign key references are valid.
-Result: PASS
-
-Check 7:
-ENROLLMENT has a composite primary key.
-Result: PASS
-
-
-8. GENERATED SQL
-================
-
-${generateSQL()}
-
-
-9. FINAL OUTPUT INTERPRETATION
-==============================
-
-The original ER model contains two strong entities,
-STUDENT and COURSE, connected through the M:N relationship
-ENROLLS.
-
-The two entities are converted into the STUDENT and COURSE
-relations.
-
-Since ENROLLS is an M:N relationship, the relationship is
-represented using the separate ENROLLMENT relation.
-
-The primary keys of STUDENT and COURSE are included in
-ENROLLMENT as foreign keys.
-
-Together, StudentID and CourseID form the composite primary
-key of ENROLLMENT.
-
-
-10. LEARNING NOTE
-=================
-
-An M:N relationship is represented using a separate relation.
-
-The primary keys of the participating entities become
-foreign keys in the new relation.
-
-The foreign keys together can form the composite primary key
-of the relationship relation when appropriate.
-
-
-11. REPORT CONTENT CHECKLIST
-============================
-
-[YES] User input ER model included
-[YES] Entity information included
-[YES] Relationship and cardinality included
-[YES] Processing steps included
-[YES] Intermediate mapping results included
-[YES] Final relational schema included
-[YES] Primary keys identified
-[YES] Foreign keys identified
-[YES] Validation checks included
-[YES] Generated SQL included
-[YES] Final output interpretation included
-[YES] Learning note included
-
+${
+  mappingResult.errors.length > 0
+    ? `Errors:\n${mappingResult.errors.join("\n")}`
+    : "No mapping errors reported."
+}
 
 END OF REPORT
-=============
-`
+`;
 
-    const blob = new Blob([report], {
-      type: 'text/plain;charset=utf-8',
-    })
+    downloadFile(
+      "ER_Mapping_Report.txt",
+      report,
+    );
+  };
 
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-
-    link.href = url
-    link.download = 'ER-Mapping-Report.txt'
-
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    URL.revokeObjectURL(url)
-  }
-
-  const checkPracticeAnswer = () => {
-    if (selectedAnswer === null) return
-
-    const isCorrect =
-      selectedAnswer === practiceQuestions[currentQuestion].answer
-
-    if (isCorrect) {
-      setScore((previousScore) => previousScore + 1)
+  const handleViewExplanation = () => {
+    if (!hasMapping) {
+      return;
     }
 
-    setAnswerChecked(true)
-  }
+    const nextState = !showExplanation;
 
-  const nextPracticeQuestion = () => {
-    if (currentQuestion < practiceQuestions.length - 1) {
-      setCurrentQuestion((previousQuestion) => previousQuestion + 1)
-      setSelectedAnswer(null)
-      setAnswerChecked(false)
-    } else {
-      setShowResult(true)
+    setShowExplanation(nextState);
+
+    if (nextState) {
+      setTimeout(() => {
+        scrollTo("explanation");
+      }, 100);
     }
-  }
+  };
 
-  const restartPractice = () => {
-    setCurrentQuestion(0)
-    setSelectedAnswer(null)
-    setScore(0)
-    setAnswerChecked(false)
-    setShowResult(false)
-  }
+  const handleThemeToggle = () => {
+    setDarkMode((current) => !current);
+  };
+
+  const handlePracticeAnswer = (
+    questionIndex: number,
+    optionIndex: number,
+  ) => {
+    if (practiceSubmitted) {
+      return;
+    }
+
+    setPracticeAnswers((current) => ({
+      ...current,
+      [questionIndex]: optionIndex,
+    }));
+  };
+
+  const handlePracticeSubmit = () => {
+    setPracticeSubmitted(true);
+  };
+
+  const handlePracticeReset = () => {
+    setPracticeAnswers({});
+    setPracticeSubmitted(false);
+  };
+
+  const practiceScore = filteredQuestions.reduce(
+    (score, question) => {
+      const originalIndex =
+        practiceQuestions.indexOf(question);
+
+      if (
+        practiceAnswers[originalIndex] ===
+        question.answer
+      ) {
+        return score + 1;
+      }
+
+      return score;
+    },
+    0,
+  );
 
   return (
-    <div className={`app ${darkMode ? 'dark-mode' : ''}`}>
+    <div className="app">
+      {/* =========================
+          NAVIGATION
+      ========================= */}
+
       <nav className="navbar">
-        <div className="logo">
-          ER <span>Mapper</span>
+        <div
+          className="logo"
+          onClick={() =>
+            window.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            })
+          }
+          style={{ cursor: "pointer" }}
+        >
+          ER <span>MAPPER</span>
         </div>
 
         <div className="nav-links">
-          <button onClick={() => scrollToSection('home')}>
+          <button
+            onClick={() =>
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              })
+            }
+          >
             Home
           </button>
 
-          <button onClick={() => scrollToSection('mapper')}>
+          <button
+            onClick={() => scrollTo("schema")}
+          >
             Mapper
           </button>
 
-          <button onClick={() => scrollToSection('learn')}>
+          <button
+            onClick={() =>
+              scrollTo("mapping-steps")
+            }
+          >
+            Mapping Steps
+          </button>
+
+          <button
+            onClick={() => scrollTo("learn")}
+          >
             Learn
           </button>
 
-          <button onClick={() => scrollToSection('practice')}>
-            Practice
+          <button
+            onClick={() => scrollTo("practice")}
+          >
+            Question Bank
           </button>
 
-          <button onClick={() => scrollToSection('help')}>
+          <button
+            onClick={() => scrollTo("help")}
+          >
             Help
           </button>
 
-          <button onClick={() => scrollToSection('developed')}>
+          <button
+            onClick={() =>
+              scrollTo("developed-by")
+            }
+          >
             Developed By
           </button>
 
           <button
             className="theme-btn"
-            onClick={toggleDarkMode}
-            aria-label="Toggle day and night mode"
+            onClick={handleThemeToggle}
+            title="Toggle day/night mode"
           >
-            {darkMode ? '☀️' : '🌙'}
+            {darkMode ? "☀️ Day" : "🌙 Night"}
           </button>
         </div>
       </nav>
 
-      <main>
-        <section className="hero-section" id="home">
-          <div className="hero-content">
-            <p className="tag">DBMS VIRTUAL LAB</p>
+      {/* =========================
+          HERO
+      ========================= */}
 
-            <h1>
-              ER Diagram to
-              <br />
-              <span>Relational Schema</span>
-            </h1>
+      <section className="hero-section">
+        <div className="hero-content">
+          <p className="tag">DBMS VIRTUAL LAB</p>
 
-            <p className="description">
-              Convert Entity-Relationship diagrams into relational
-              database schemas with clear mapping steps,
-              primary keys, foreign keys, and generated SQL.
+          <h1>
+            ER Diagram to
+            <span> Relational Schema</span>
+          </h1>
+
+          <p className="description">
+            Convert your Entity-Relationship
+            diagram into a structured relational
+            database schema with clear mapping
+            steps and SQL generation.
+          </p>
+
+          <div className="hero-buttons">
+            <button
+              className="primary-btn"
+              onClick={handleGenerateSchema}
+            >
+              {hasMapping
+                ? "View Generated Schema →"
+                : "Create ER Diagram →"}
+            </button>
+
+            <button
+              className="secondary-btn"
+              onClick={handleOpenERBuilder}
+            >
+              Open ER Builder →
+            </button>
+
+            <button
+              className="secondary-btn"
+              onClick={() => scrollTo("learn")}
+            >
+              Learn ER Mapping
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================
+          ER BUILDER
+      ========================= */}
+
+      {showERBuilder && (
+        <section
+          className="er-builder-section"
+          id="er-builder-section"
+        >
+          <div className="section-heading">
+            <p className="tag">
+              ER DIAGRAM BUILDER
             </p>
 
-            <div className="hero-buttons">
-              <button
-                className="primary-btn"
-                onClick={() => scrollToSection('mapper')}
-              >
-                View Schema →
-              </button>
-
-              <button
-                className="secondary-btn"
-                onClick={() => scrollToSection('learn')}
-              >
-                Learn Mapping
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="schema-section" id="mapper">
-          <div className="section-heading">
-            <p className="tag">RELATIONAL SCHEMA</p>
-
-            <h2>Generated Database Schema</h2>
+            <h2>Create Your ER Diagram</h2>
 
             <p>
-              The ER model has been converted into the following
+              Add entities, attributes and
+              relationships, then generate your
               relational schema.
             </p>
           </div>
 
-          <div className="schema-grid">
-            {relations.map((relation) => (
-              <div className="schema-card" key={relation.name}>
-                <div className="card-title">
-                  <h3>{relation.name}</h3>
-                  <span>
-                    {relation.attributes.length} attributes
-                  </span>
-                </div>
+          <ERBuilder
+            onMappingGenerated={
+              handleMappingGenerated
+            }
+          />
+        </section>
+      )}
 
-                <div className="attribute-list">
-                  {relation.attributes.map((attribute) => (
+      {/* =========================
+          GENERATED SCHEMA
+      ========================= */}
+
+      <section
+        className="schema-section"
+        id="schema"
+      >
+        <div className="section-heading">
+          <p className="tag">
+            GENERATED OUTPUT
+          </p>
+
+          <h2>Relational Schema</h2>
+
+          <p>
+            {loading
+              ? "Loading the latest mapping..."
+              : hasMapping
+                ? "Schema generated from your ER diagram."
+                : "No mapping has been generated yet."}
+          </p>
+        </div>
+
+        {loading ? (
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                ...
+              </div>
+
+              <div>
+                <h3>Loading mapping</h3>
+
+                <p>
+                  Checking the mapping engine
+                  for the latest generated
+                  schema.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : hasMapping ? (
+          <>
+            <div className="schema-grid">
+              {activeTables.map((table) => (
+                <div
+                  className="schema-card"
+                  key={table.name}
+                >
+                  <div className="card-title">
+                    <h3>{table.name}</h3>
+
+                    <span>TABLE</span>
+                  </div>
+
+                  {table.columns.map(
+                    (column) => {
+                      const isPrimary =
+                        table.primaryKey.includes(
+                          column.name,
+                        );
+
+                      const foreignKey =
+                        table.foreignKeys.find(
+                          (foreign) =>
+                            foreign.column ===
+                            column.name,
+                        );
+
+                      return (
+                        <div
+                          className={`attribute ${
+                            isPrimary
+                              ? "primary"
+                              : ""
+                          } ${
+                            foreignKey
+                              ? "foreign"
+                              : ""
+                          }`}
+                          key={column.name}
+                        >
+                          {isPrimary && "🔑 "}
+
+                          {foreignKey && "🔗 "}
+
+                          {column.name}
+
+                          {foreignKey ? (
+                            <small>
+                              →{" "}
+                              {
+                                foreignKey.referencedTable
+                              }
+                              .
+                              {
+                                foreignKey.referencedColumn
+                              }
+                            </small>
+                          ) : (
+                            <small>
+                              {column.dataType}
+                            </small>
+                          )}
+                        </div>
+                      );
+                    },
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {activeRelationships.length >
+              0 && (
+              <div className="steps relationship-steps">
+                {activeRelationships.map(
+                  (
+                    relationship,
+                    index,
+                  ) => (
                     <div
-                      className="attribute"
-                      key={`${relation.name}-${attribute.name}`}
+                      className="step"
+                      key={`${relationship.name}-${index}`}
                     >
-                      <div>
-                        <strong>{attribute.name}</strong>
-                        <small>{attribute.type}</small>
+                      <div className="step-number">
+                        {index + 1}
                       </div>
 
-                      <div className="attribute-tags">
-                        {attribute.primaryKey && (
-                          <span className="pk-badge">
-                            PK
-                          </span>
-                        )}
+                      <div>
+                        <h3>
+                          {
+                            relationship.name
+                          }
+                        </h3>
 
-                        {attribute.foreignKey && (
-                          <span className="fk-badge">
-                            FK
-                          </span>
-                        )}
+                        <p>
+                          <strong>
+                            {
+                              relationship.cardinality
+                            }
+                          </strong>{" "}
+                          —{" "}
+                          {
+                            relationship.mapping
+                          }
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-
-                {relation.attributes.some(
-                  (attribute) => attribute.references
-                ) && (
-                  <div className="reference-text">
-                    {relation.attributes
-                      .filter(
-                        (attribute) => attribute.references
-                      )
-                      .map((attribute) => (
-                        <div key={attribute.name}>
-                          {attribute.name} →{' '}
-                          {attribute.references}
-                        </div>
-                      ))}
-                  </div>
+                  ),
                 )}
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="steps-section">
-          <div className="section-heading">
-            <p className="tag">MAPPING PROCESS</p>
-
-            <h2>Mapping Steps</h2>
-
-            <p>
-              Understand how the ER model is transformed into
-              relations.
-            </p>
-          </div>
-
-          <div className="steps-list">
-            {mappingSteps.map((step, index) => (
-              <div className="step" key={step}>
-                <div className="step-number">
-                  {index + 1}
-                </div>
-
-                <div>
-                  <h3>Step {index + 1}</h3>
-                  <p>{step}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="action-buttons">
-            <button
-              className="primary-btn"
-              onClick={() => setShowSQL(!showSQL)}
-            >
-              {showSQL ? 'Hide SQL' : 'Generate SQL'}
-            </button>
-
-            <button
-              className="secondary-btn"
-              onClick={downloadReport}
-            >
-              Download Report
-            </button>
-
-            <button
-              className="secondary-btn"
-              onClick={() =>
-                setShowExplanation(!showExplanation)
-              }
-            >
-              {showExplanation
-                ? 'Hide Explanation'
-                : 'View Mapping Explanation'}
-            </button>
-          </div>
-
-          {showSQL && (
-            <div className="sql-box">
-              <div className="sql-header">
-                <h3>Generated SQL</h3>
-
-                <button
-                  className="secondary-btn"
-                  onClick={copySQL}
-                >
-                  Copy SQL
-                </button>
+            )}
+          </>
+        ) : (
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                →
               </div>
 
-              <pre>{generateSQL()}</pre>
-            </div>
-          )}
+              <div>
+                <h3>
+                  Create your ER diagram
+                </h3>
 
-          {showExplanation && (
-            <div className="schema-card explanation-card">
-              <p className="tag">WHY?</p>
+                <p>
+                  Open the ER Builder, create
+                  your entities, attributes and
+                  relationships, then generate
+                  the relational schema.
+                </p>
 
-              <h3>Why is ENROLLMENT created?</h3>
-
-              <p>
-                STUDENT and COURSE participate in an M:N
-                relationship called ENROLLS. An M:N relationship
-                cannot be represented directly using only one
-                foreign key, so a separate ENROLLMENT relation is
-                created.
-              </p>
-
-              <p>
-                The primary keys of STUDENT and COURSE become
-                foreign keys in ENROLLMENT. Together they form
-                the composite primary key.
-              </p>
-            </div>
-          )}
-        </section>
-
-        <section className="steps-section" id="learn">
-          <div className="section-heading">
-            <p className="tag">LEARN</p>
-
-            <h2>ER Diagram & Relational Mapping</h2>
-
-            <p>
-              Learn the important DBMS concepts used during
-              ER-to-relational schema conversion.
-            </p>
-          </div>
-
-          <div className="schema-grid">
-            <div className="schema-card">
-              <h3>Entity</h3>
-              <p>
-                An entity represents a real-world object or
-                concept that can be uniquely identified.
-              </p>
-              <p>
-                Example: STUDENT, COURSE, EMPLOYEE.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>Strong Entity</h3>
-              <p>
-                A strong entity has its own primary key and can
-                exist independently.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>Simple Attribute</h3>
-              <p>
-                An attribute that cannot be divided into smaller
-                meaningful components.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>Composite Attribute</h3>
-              <p>
-                An attribute that can be divided into smaller
-                component attributes.
-              </p>
-
-              <p>
-                Example: Address → Street, City, PIN.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>Multivalued Attribute</h3>
-              <p>
-                An attribute that can contain multiple values
-                for one entity.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>Derived Attribute</h3>
-              <p>
-                An attribute whose value can be calculated from
-                another attribute.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>1:1 Relationship</h3>
-              <p>
-                One entity instance is associated with one
-                instance of another entity.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>1:N Relationship</h3>
-              <p>
-                One entity instance can be associated with
-                multiple instances of another entity.
-              </p>
-            </div>
-
-            <div className="schema-card">
-              <h3>M:N Relationship</h3>
-              <p>
-                Multiple instances of one entity can be related
-                to multiple instances of another entity.
-              </p>
-
-              <p>
-                A separate relation is commonly created during
-                relational mapping.
-              </p>
-            </div>
-          </div>
-
-          <div className="learn-rules">
-            <h3>Important Mapping Rules</h3>
-
-            <ul>
-              <li>
-                Strong entities are mapped to separate
-                relations.
-              </li>
-
-              <li>
-                Simple attributes become relation columns.
-              </li>
-
-              <li>
-                Composite attributes are represented using their
-                component attributes.
-              </li>
-
-              <li>
-                Multivalued attributes are generally represented
-                using a separate relation.
-              </li>
-
-              <li>
-                In a 1:N relationship, the primary key of the
-                1-side can be placed as a foreign key on the
-                N-side.
-              </li>
-
-              <li>
-                An M:N relationship is represented using a
-                separate relation containing the participating
-                primary keys.
-              </li>
-            </ul>
-          </div>
-
-          <div className="schema-card">
-            <h3>Animated ER → Relational Mapping</h3>
-
-            <div className="mapping-animation">
-              <div className="animation-box">
-                <strong>STUDENT</strong>
-                <span>StudentID</span>
-                <small>Strong Entity</small>
-              </div>
-
-              <div className="animation-arrow">→</div>
-
-              <div className="animation-box">
-                <strong>STUDENT</strong>
-                <span>StudentID, Name, Email</span>
-                <small>Relation</small>
-              </div>
-
-              <div className="animation-arrow">→</div>
-
-              <div className="animation-box">
-                <strong>SQL</strong>
-                <span>CREATE TABLE</span>
-                <small>Database Table</small>
-              </div>
-            </div>
-          </div>
-
-          <div className="schema-card">
-            <h3>M:N Example</h3>
-
-            <p>
-              STUDENT and COURSE have an M:N relationship
-              called ENROLLS.
-            </p>
-
-            <p>
-              Therefore, the relationship is converted into the
-              ENROLLMENT relation.
-            </p>
-
-            <p>
-              <strong>
-                ENROLLMENT(StudentID, CourseID)
-              </strong>
-            </p>
-          </div>
-
-          <div className="schema-card">
-            <h3>References & Learning Resources</h3>
-
-            <ul className="reference-list">
-              <li>
-                <strong>Database System Concepts</strong> —
-                Abraham Silberschatz, Henry F. Korth and S.
-                Sudarshan
-              </li>
-
-              <li>
-                <strong>Fundamentals of Database Systems</strong>{' '}
-                — Ramez Elmasri and Shamkant B. Navathe
-              </li>
-
-              <li>
-                <strong>Database Management Systems</strong> —
-                Raghu Ramakrishnan
-              </li>
-
-              <li>
-                DBMS ER Model and Relational Model educational
-                resources
-              </li>
-
-              <li>
-                ER diagram and relational schema mapping video
-                tutorials
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        <section className="steps-section" id="practice">
-          <div className="section-heading">
-            <p className="tag">PRACTICE MODE</p>
-
-            <h2>Test Your Knowledge</h2>
-
-            <p>
-              Answer the questions to check your understanding
-              of ER diagrams and relational schema mapping.
-            </p>
-          </div>
-
-          {!showResult ? (
-            <div className="schema-card practice-card">
-              <p className="practice-progress">
-                Question {currentQuestion + 1} of{' '}
-                {practiceQuestions.length}
-              </p>
-
-              <h3 className="practice-question">
-                {practiceQuestions[currentQuestion].question}
-              </h3>
-
-              <div className="practice-options">
-                {practiceQuestions[currentQuestion].options.map(
-                  (option, index) => (
-                    <button
-                      key={option}
-                      className={`practice-option ${
-                        selectedAnswer === index
-                          ? 'selected'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        if (!answerChecked) {
-                          setSelectedAnswer(index)
-                        }
-                      }}
-                    >
-                      {String.fromCharCode(65 + index)}.{' '}
-                      {option}
-                    </button>
-                  )
-                )}
-              </div>
-
-              {!answerChecked ? (
                 <button
                   className="primary-btn"
-                  onClick={checkPracticeAnswer}
-                  disabled={selectedAnswer === null}
+                  onClick={handleOpenERBuilder}
                 >
-                  Check Answer
+                  Open ER Builder →
                 </button>
-              ) : (
-                <div className="practice-feedback">
-                  {selectedAnswer ===
-                  practiceQuestions[currentQuestion]
-                    .answer ? (
-                    <p className="correct-answer">
-                      ✓ Correct Answer!
-                    </p>
-                  ) : (
-                    <p className="wrong-answer">
-                      ✗ Incorrect. Correct answer:{' '}
-                      {
-                        practiceQuestions[currentQuestion]
-                          .options[
-                          practiceQuestions[currentQuestion]
-                            .answer
-                        ]
-                      }
-                    </p>
-                  )}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
 
-                  <button
-                    className="primary-btn"
-                    onClick={nextPracticeQuestion}
-                  >
-                    {currentQuestion <
-                    practiceQuestions.length - 1
-                      ? 'Next Question →'
-                      : 'View Final Score'}
-                  </button>
+      {/* =========================
+          MAPPING STEPS
+      ========================= */}
+
+      <section
+        className="steps-section"
+        id="mapping-steps"
+      >
+        <div className="section-heading">
+          <p className="tag">
+            HOW IT WAS MAPPED
+          </p>
+
+          <h2>Mapping Steps</h2>
+
+          <p>
+            Understand how the ER model was
+            transformed into relational tables.
+          </p>
+        </div>
+
+        {hasMapping ? (
+          <div className="steps">
+            {activeExplanations.map(
+              (explanation, index) => (
+                <div
+                  className="step"
+                  key={index}
+                >
+                  <div className="step-number">
+                    {String(index + 1).padStart(
+                      2,
+                      "0",
+                    )}
+                  </div>
+
+                  <div>
+                    <h3>
+                      Mapping Rule{" "}
+                      {index + 1}
+                    </h3>
+
+                    <p>{explanation}</p>
+                  </div>
                 </div>
-              )}
+              ),
+            )}
+          </div>
+        ) : (
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                01
+              </div>
+
+              <div>
+                <h3>
+                  Your mapping will appear
+                  here
+                </h3>
+
+                <p>
+                  Generate a relational schema
+                  from the ER Builder to see
+                  the actual mapping steps.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+            {/* =========================
+          LEARN
+      ========================= */}
+
+      <section
+        className="steps-section"
+        id="learn"
+      >
+        <div className="section-heading">
+          <p className="tag">LEARN</p>
+
+          <h2>
+            ER Modelling &amp; Relational
+            Mapping
+          </h2>
+
+          <p>
+            Complete study material for ER
+            modelling, database keys,
+            relationships and ER-to-relational
+            mapping.
+          </p>
+        </div>
+
+        {/* ER MODEL BASICS */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto",
+          }}
+        >
+          <div className="section-heading">
+            <p className="tag">
+              FUNDAMENTALS
+            </p>
+
+            <h2>ER Model Basics</h2>
+          </div>
+
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                01
+              </div>
+
+              <div>
+                <h3>Entity</h3>
+
+                <p>
+                  An entity represents a
+                  real-world object or concept
+                  that can be uniquely
+                  identified, such as Student,
+                  Course or Employee.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  STUDENT, COURSE, EMPLOYEE
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                02
+              </div>
+
+              <div>
+                <h3>Entity Set</h3>
+
+                <p>
+                  An entity set is a collection
+                  of similar entities that share
+                  the same attributes.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  all students in a university.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                03
+              </div>
+
+              <div>
+                <h3>Attribute</h3>
+
+                <p>
+                  Attributes describe the
+                  properties of an entity.
+                </p>
+
+                <p>
+                  <strong>Examples:</strong>{" "}
+                  StudentID, Name, Email and
+                  CourseName.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                04
+              </div>
+
+              <div>
+                <h3>Relationship</h3>
+
+                <p>
+                  A relationship describes an
+                  association between two or
+                  more entities.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  STUDENT ENROLLS IN COURSE.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ATTRIBUTES */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
+          <div className="section-heading">
+            <p className="tag">
+              ATTRIBUTES
+            </p>
+
+            <h2>Types of Attributes</h2>
+          </div>
+
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                01
+              </div>
+
+              <div>
+                <h3>
+                  Simple Attribute
+                </h3>
+
+                <p>
+                  A simple attribute cannot be
+                  meaningfully divided into
+                  smaller components.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  Gender.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                02
+              </div>
+
+              <div>
+                <h3>
+                  Composite Attribute
+                </h3>
+
+                <p>
+                  A composite attribute can be
+                  divided into smaller meaningful
+                  components.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  Address → Street, City, PIN.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                03
+              </div>
+
+              <div>
+                <h3>
+                  Multivalued Attribute
+                </h3>
+
+                <p>
+                  A multivalued attribute can
+                  contain multiple values for a
+                  single entity.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  PhoneNumbers.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                04
+              </div>
+
+              <div>
+                <h3>
+                  Derived Attribute
+                </h3>
+
+                <p>
+                  A derived attribute can be
+                  calculated from another
+                  attribute.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  Age derived from DateOfBirth.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* KEYS */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
+          <div className="section-heading">
+            <p className="tag">KEYS</p>
+
+            <h2>Database Keys</h2>
+          </div>
+
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                01
+              </div>
+
+              <div>
+                <h3>Primary Key</h3>
+
+                <p>
+                  A primary key uniquely
+                  identifies each tuple in a
+                  relation.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  StudentID.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                02
+              </div>
+
+              <div>
+                <h3>Candidate Key</h3>
+
+                <p>
+                  A candidate key is a minimal
+                  set of attributes that can
+                  uniquely identify a tuple.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                03
+              </div>
+
+              <div>
+                <h3>Composite Key</h3>
+
+                <p>
+                  A composite key contains more
+                  than one attribute.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  StudentID + CourseID.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                04
+              </div>
+
+              <div>
+                <h3>Foreign Key</h3>
+
+                <p>
+                  A foreign key references a key
+                  in another relation and helps
+                  maintain referential integrity.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RELATIONSHIPS */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
+          <div className="section-heading">
+            <p className="tag">
+              RELATIONSHIPS
+            </p>
+
+            <h2>
+              Relationship Cardinality
+            </h2>
+          </div>
+
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                1:1
+              </div>
+
+              <div>
+                <h3>
+                  One-to-One
+                </h3>
+
+                <p>
+                  One entity instance is
+                  associated with at most one
+                  instance of the other entity.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  PERSON ↔ PASSPORT.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                1:N
+              </div>
+
+              <div>
+                <h3>
+                  One-to-Many
+                </h3>
+
+                <p>
+                  One entity instance can be
+                  related to many instances of
+                  another entity.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  DEPARTMENT → EMPLOYEE.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                N:1
+              </div>
+
+              <div>
+                <h3>
+                  Many-to-One
+                </h3>
+
+                <p>
+                  Many entity instances can be
+                  related to one entity instance.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  EMPLOYEE → DEPARTMENT.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                M:N
+              </div>
+
+              <div>
+                <h3>
+                  Many-to-Many
+                </h3>
+
+                <p>
+                  Many instances on both sides
+                  can participate in the
+                  relationship.
+                </p>
+
+                <p>
+                  <strong>Example:</strong>{" "}
+                  STUDENT ↔ COURSE.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* STRONG AND WEAK ENTITY */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
+          <div className="section-heading">
+            <p className="tag">
+              SPECIAL ENTITIES
+            </p>
+
+            <h2>
+              Strong &amp; Weak Entities
+            </h2>
+          </div>
+
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                01
+              </div>
+
+              <div>
+                <h3>
+                  Strong Entity
+                </h3>
+
+                <p>
+                  A strong entity has its own
+                  primary key and can be uniquely
+                  identified independently.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                02
+              </div>
+
+              <div>
+                <h3>
+                  Weak Entity
+                </h3>
+
+                <p>
+                  A weak entity depends on an
+                  owner entity for identification.
+                  It normally uses a partial key
+                  together with the owner's key.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                03
+              </div>
+
+              <div>
+                <h3>
+                  Partial Key
+                </h3>
+
+                <p>
+                  A partial key helps distinguish
+                  weak-entity instances belonging
+                  to the same owner.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ER TO RELATIONAL MAPPING */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
+          <div className="section-heading">
+            <p className="tag">
+              MAPPING RULES
+            </p>
+
+            <h2>
+              ER to Relational Mapping
+            </h2>
+          </div>
+
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                01
+              </div>
+
+              <div>
+                <h3>
+                  Strong Entity Mapping
+                </h3>
+
+                <p>
+                  Each strong entity is normally
+                  converted into a relation.
+                  Simple attributes become
+                  columns and the entity key
+                  becomes the primary key.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                02
+              </div>
+
+              <div>
+                <h3>
+                  Composite Attribute Mapping
+                </h3>
+
+                <p>
+                  Components of a composite
+                  attribute are represented as
+                  separate attributes in the
+                  relation.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                03
+              </div>
+
+              <div>
+                <h3>
+                  Multivalued Attribute Mapping
+                </h3>
+
+                <p>
+                  A multivalued attribute is
+                  normally represented using a
+                  separate relation containing
+                  the owner's key and the
+                  multivalued attribute.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                04
+              </div>
+
+              <div>
+                <h3>
+                  1:1 Relationship Mapping
+                </h3>
+
+                <p>
+                  A foreign key from one
+                  participating relation can
+                  represent the relationship,
+                  depending on participation and
+                  design requirements.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                05
+              </div>
+
+              <div>
+                <h3>
+                  1:N Relationship Mapping
+                </h3>
+
+                <p>
+                  The primary key of the 1-side
+                  is normally added as a foreign
+                  key to the relation representing
+                  the N-side.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                06
+              </div>
+
+              <div>
+                <h3>
+                  M:N Relationship Mapping
+                </h3>
+
+                <p>
+                  An M:N relationship is normally
+                  converted into a separate
+                  relation containing foreign keys
+                  referencing the participating
+                  entity relations.
+                </p>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                07
+              </div>
+
+              <div>
+                <h3>
+                  Weak Entity Mapping
+                </h3>
+
+                <p>
+                  A weak entity is mapped to a
+                  relation containing its
+                  attributes, owner entity key and
+                  the attributes needed to form
+                  its primary key.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* EDUCATIONAL VIDEO */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
+          <p className="tag">
+            WATCH &amp; EXPLORE
+          </p>
+
+          <h2
+            style={{
+              fontSize: "28px",
+              margin: "5px 0 12px",
+            }}
+          >
+            ER Diagram to Relational Table
+          </h2>
+
+          <p
+            style={{
+              color: "#64748b",
+              lineHeight: 1.6,
+              marginBottom: "20px",
+            }}
+          >
+            Watch an educational walkthrough of
+            converting ER diagrams into
+            relational tables.
+          </p>
+
+          <a
+            href="https://www.geeksforgeeks.org/videos/converting-an-er-diagram-to-a-relational-table/"
+            target="_blank"
+            rel="noreferrer"
+            className="secondary-btn"
+          >
+            Watch Educational Video →
+          </a>
+        </div>
+
+        {/* REFERENCES */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "60px auto 0",
+          }}
+        >
+          <p className="tag">
+            REFERENCES
+          </p>
+
+          <h2
+            style={{
+              fontSize: "28px",
+              margin: "5px 0 20px",
+            }}
+          >
+            Further Reading
+          </h2>
+
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">
+                01
+              </div>
+
+              <div>
+                <h3>
+                  Introduction to ER Model
+                </h3>
+
+                <p>
+                  Learn about entities,
+                  attributes, relationships and
+                  ER diagram fundamentals.
+                </p>
+
+                <a
+                  href="https://www.geeksforgeeks.org/dbms/introduction-of-er-model/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="secondary-btn"
+                  style={{
+                    marginTop: "12px",
+                  }}
+                >
+                  Open Reference →
+                </a>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                02
+              </div>
+
+              <div>
+                <h3>
+                  ER Model to Relational
+                  Model
+                </h3>
+
+                <p>
+                  Study mapping rules for
+                  entities, relationships, keys
+                  and special attributes.
+                </p>
+
+                <a
+                  href="https://www.geeksforgeeks.org/dbms/mapping-from-er-model-to-relational-model/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="secondary-btn"
+                  style={{
+                    marginTop: "12px",
+                  }}
+                >
+                  Open Reference →
+                </a>
+              </div>
+            </div>
+
+            <div className="step">
+              <div className="step-number">
+                03
+              </div>
+
+              <div>
+                <h3>
+                  DBMS Learning Resource
+                </h3>
+
+                <p>
+                  Use additional DBMS learning
+                  material for database concepts
+                  and exam preparation.
+                </p>
+
+                <a
+                  href="https://www.geeksforgeeks.org/dbms/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="secondary-btn"
+                  style={{
+                    marginTop: "12px",
+                  }}
+                >
+                  Open DBMS Resources →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================
+          QUESTION BANK
+      ========================= */}
+
+      <section
+        className="steps-section"
+        id="practice"
+      >
+        <div className="section-heading">
+          <p className="tag">
+            QUESTION BANK
+          </p>
+
+          <h2>
+            DBMS Practice &amp; PYQ Preparation
+          </h2>
+
+          <p>
+            Practice questions related to ER
+            modelling, keys, relationships and
+            ER-to-relational mapping.
+          </p>
+        </div>
+
+        {/* FILTERS */}
+
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto 35px",
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "15px",
+          }}
+        >
+          <input
+            type="text"
+            value={questionSearch}
+            onChange={(event) =>
+              setQuestionSearch(
+                event.target.value,
+              )
+            }
+            placeholder="Search questions..."
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              borderRadius: "10px",
+              border: "1px solid #d1d5db",
+              background: "transparent",
+            }}
+          />
+
+          <select
+            value={questionSource}
+            onChange={(event) =>
+              setQuestionSource(
+                event.target.value,
+              )
+            }
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              borderRadius: "10px",
+              border: "1px solid #d1d5db",
+              background: "transparent",
+            }}
+          >
+            <option>
+              All Sources
+            </option>
+            <option>
+              General DBMS
+            </option>
+            <option>GATE</option>
+            <option>
+              University
+            </option>
+            <option>
+              College
+            </option>
+            <option>
+              Placement
+            </option>
+            <option>
+              Competitive Exams
+            </option>
+          </select>
+
+          <select
+            value={questionTopic}
+            onChange={(event) =>
+              setQuestionTopic(
+                event.target.value,
+              )
+            }
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              borderRadius: "10px",
+              border: "1px solid #d1d5db",
+              background: "transparent",
+            }}
+          >
+            <option>
+              All Topics
+            </option>
+            <option>
+              ER Model
+            </option>
+            <option>
+              Attributes
+            </option>
+            <option>
+              Keys
+            </option>
+            <option>
+              Relationships
+            </option>
+            <option>
+              Cardinality
+            </option>
+            <option>
+              Weak Entity
+            </option>
+            <option>
+              ER → Relational Mapping
+            </option>
+          </select>
+
+          <select
+            value={questionDifficulty}
+            onChange={(event) =>
+              setQuestionDifficulty(
+                event.target.value,
+              )
+            }
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              borderRadius: "10px",
+              border: "1px solid #d1d5db",
+              background: "transparent",
+            }}
+          >
+            <option>
+              All Difficulties
+            </option>
+            <option>Easy</option>
+            <option>Medium</option>
+            <option>Hard</option>
+          </select>
+        </div>
+
+        <p
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto 20px",
+            color: "#64748b",
+          }}
+        >
+          Showing{" "}
+          {filteredQuestions.length}{" "}
+          question
+          {filteredQuestions.length !==
+          1
+            ? "s"
+            : ""}
+          .
+        </p>
+
+        <div className="steps">
+          {filteredQuestions.length ===
+          0 ? (
+            <div className="step">
+              <div className="step-number">
+                !
+              </div>
+
+              <div>
+                <h3>
+                  No questions found
+                </h3>
+
+                <p>
+                  Try changing the source,
+                  topic, difficulty or search
+                  text.
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="schema-card practice-card">
-              <p className="tag">QUIZ COMPLETED</p>
+            filteredQuestions.map(
+              (
+                question,
+                questionIndex,
+              ) => {
+                const originalIndex =
+                  practiceQuestions.indexOf(
+                    question,
+                  );
+
+                return (
+                  <div
+                    className="step"
+                    key={originalIndex}
+                  >
+                    <div className="step-number">
+                      {String(
+                        questionIndex + 1,
+                      ).padStart(2, "0")}
+                    </div>
+
+                    <div
+                      style={{
+                        width: "100%",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap:
+                            "wrap",
+                          marginBottom:
+                            "10px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            padding:
+                              "5px 10px",
+                            borderRadius:
+                              "20px",
+                            fontSize:
+                              "12px",
+                            background:
+                              "#eef2ff",
+                          }}
+                        >
+                          {question.source}
+                        </span>
+
+                        <span
+                          style={{
+                            padding:
+                              "5px 10px",
+                            borderRadius:
+                              "20px",
+                            fontSize:
+                              "12px",
+                            background:
+                              "#f0fdf4",
+                          }}
+                        >
+                          {question.topic}
+                        </span>
+
+                        <span
+                          style={{
+                            padding:
+                              "5px 10px",
+                            borderRadius:
+                              "20px",
+                            fontSize:
+                              "12px",
+                            background:
+                              "#fff7ed",
+                          }}
+                        >
+                          {
+                            question.difficulty
+                          }
+                        </span>
+                      </div>
+
+                      <h3>
+                        {question.question}
+                      </h3>
+
+                      <div
+                        style={{
+                          marginTop:
+                            "15px",
+                        }}
+                      >
+                        {question.options.map(
+                          (
+                            option,
+                            optionIndex,
+                          ) => {
+                            const selected =
+                              practiceAnswers[
+                                originalIndex
+                              ] ===
+                              optionIndex;
+
+                            const correct =
+                              question.answer ===
+                              optionIndex;
+
+                            let borderColor =
+                              "#e5e7eb";
+
+                            if (
+                              practiceSubmitted &&
+                              correct
+                            ) {
+                              borderColor =
+                                "#16a34a";
+                            }
+
+                            if (
+                              practiceSubmitted &&
+                              selected &&
+                              !correct
+                            ) {
+                              borderColor =
+                                "#dc2626";
+                            }
+
+                            return (
+                              <button
+                                key={
+                                  optionIndex
+                                }
+                                onClick={() =>
+                                  handlePracticeAnswer(
+                                    originalIndex,
+                                    optionIndex,
+                                  )
+                                }
+                                disabled={
+                                  practiceSubmitted
+                                }
+                                style={{
+                                  display:
+                                    "block",
+                                  width:
+                                    "100%",
+                                  textAlign:
+                                    "left",
+                                  padding:
+                                    "12px 15px",
+                                  marginBottom:
+                                    "10px",
+                                  border: `1px solid ${borderColor}`,
+                                  borderRadius:
+                                    "10px",
+                                  background:
+                                    selected
+                                      ? "#eef2ff"
+                                      : "transparent",
+                                  cursor:
+                                    practiceSubmitted
+                                      ? "default"
+                                      : "pointer",
+                                }}
+                              >
+                                {String.fromCharCode(
+                                  65 +
+                                    optionIndex,
+                                )}
+                                .{" "}
+                                {option}
+                              </button>
+                            );
+                          },
+                        )}
+                      </div>
+
+                      {practiceSubmitted && (
+                        <p
+                          style={{
+                            marginTop:
+                              "10px",
+                          }}
+                        >
+                          <strong>
+                            Explanation:
+                          </strong>{" "}
+                          {
+                            question.explanation
+                          }
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              },
+            )
+          )}
+        </div>
+
+        <div className="actions">
+          {!practiceSubmitted ? (
+            <button
+              className="primary-btn"
+              onClick={
+                handlePracticeSubmit
+              }
+              disabled={
+                filteredQuestions.length ===
+                0
+              }
+            >
+              Submit Practice
+            </button>
+          ) : (
+            <>
+              <button className="primary-btn">
+                Score: {practiceScore} /{" "}
+                {filteredQuestions.length}
+              </button>
+
+              <button
+                className="secondary-btn"
+                onClick={
+                  handlePracticeReset
+                }
+              >
+                Try Again
+              </button>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* =========================
+          MAIN ACTIONS
+      ========================= */}
+
+      <section className="actions">
+        <button
+          className="primary-btn"
+          onClick={handleGenerateSQL}
+          disabled={!hasMapping}
+        >
+          Generate SQL
+        </button>
+
+        <button
+          className="secondary-btn"
+          onClick={handleDownloadReport}
+          disabled={!hasMapping}
+        >
+          Download Report
+        </button>
+
+        <button
+          className="secondary-btn"
+          onClick={handleViewExplanation}
+          disabled={!hasMapping}
+        >
+          {showExplanation
+            ? "Hide Mapping Explanation"
+            : "View Mapping Explanation"}
+        </button>
+      </section>
+
+      {/* =========================
+          SQL OUTPUT
+      ========================= */}
+
+      {showSql && hasMapping && (
+        <section
+          className="schema-section"
+          id="sql-output"
+        >
+          <div className="section-heading">
+            <p className="tag">
+              GENERATED SQL
+            </p>
+
+            <h2>SQL / DDL</h2>
+          </div>
+
+          <pre
+            style={{
+              maxWidth: "1000px",
+              margin: "0 auto",
+              padding: "24px",
+              borderRadius: "12px",
+              overflowX: "auto",
+              textAlign: "left",
+              background: darkMode
+                ? "#111827"
+                : "#f3f4f6",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {activeSql}
+          </pre>
+        </section>
+      )}
+
+      {/* =========================
+          EXPLANATION
+      ========================= */}
+
+      {showExplanation &&
+        hasMapping && (
+          <section
+            className="steps-section"
+            id="explanation"
+          >
+            <div className="section-heading">
+              <p className="tag">
+                EXPLAIN MY MAPPING
+              </p>
 
               <h2>
-                Your Score: {score} /{' '}
-                {practiceQuestions.length}
+                Why These Tables?
               </h2>
 
               <p>
-                You have completed the ER Mapping Practice Quiz.
-              </p>
-
-              <button
-                className="primary-btn"
-                onClick={restartPractice}
-              >
-                🔄 Try Again
-              </button>
-            </div>
-          )}
-        </section>
-
-        <section className="steps-section" id="help">
-          <div className="section-heading">
-            <p className="tag">HELP</p>
-
-            <h2>User Manual</h2>
-
-            <p>
-              Follow these steps to use the ER Diagram to
-              Relational Schema Mapper.
-            </p>
-          </div>
-
-          <div className="schema-card">
-            <h3>1. What does the application do?</h3>
-
-            <p>
-              The application demonstrates how an ER diagram can
-              be converted into a relational database schema.
-            </p>
-          </div>
-
-          <div className="schema-card">
-            <h3>2. What are the inputs?</h3>
-
-            <p>
-              The input consists of entities, attributes,
-              primary keys, relationships, and cardinalities
-              from an ER model.
-            </p>
-          </div>
-
-          <div className="schema-card">
-            <h3>3. What controls are available?</h3>
-
-            <p>
-              Use the navigation buttons to access Mapper, Learn,
-              Practice, Help, and Developed By sections.
-            </p>
-
-            <p>
-              Use Generate SQL to display SQL statements.
-            </p>
-
-            <p>
-              Use Download Report to download the complete
-              processing report.
-            </p>
-
-            <p>
-              Use the moon/sun button to switch between Day and
-              Night Mode.
-            </p>
-          </div>
-
-          <div className="schema-card">
-            <h3>4. How is the processing performed?</h3>
-
-            <p>
-              The system identifies entities, converts their
-              attributes into columns, identifies relationship
-              cardinality, creates required relations, and
-              generates primary and foreign keys.
-            </p>
-          </div>
-
-          <div className="schema-card">
-            <h3>5. How do I interpret the output?</h3>
-
-            <p>
-              PK represents a Primary Key. FK represents a
-              Foreign Key. The generated relations show how the
-              original ER model is represented in relational
-              form.
-            </p>
-          </div>
-
-          <div className="schema-card">
-            <h3>6. How do I download the report?</h3>
-
-            <p>
-              Scroll to the Mapping Process section and click
-              the Download Report button. A text report containing
-              the input model, mapping process, intermediate
-              results, final schema, validation, and SQL will be
-              downloaded.
-            </p>
-          </div>
-        </section>
-
-        <section className="steps-section" id="developed">
-          <div className="section-heading">
-            <p className="tag">DEVELOPED BY</p>
-
-            <h2>Project Team</h2>
-
-            <p>
-              ER Diagram to Relational Schema Mapper
-            </p>
-          </div>
-
-          <div className="schema-grid">
-            <div className="schema-card team-card">
-              <div className="team-photo">
-                📷
-              </div>
-
-              <h3>Isha Rajendra Rokade</h3>
-
-              <p>
-                Register No: 25BCE1667
-              </p>
-
-              <p>
-                Role: ER Diagram Builder
+                The following rules explain how
+                the ER model was transformed.
               </p>
             </div>
 
-            <div className="schema-card team-card">
-              <div className="team-photo">
-                📷
-              </div>
+            <div className="steps">
+              {activeExplanations.map(
+                (
+                  explanation,
+                  index,
+                ) => (
+                  <div
+                    className="step"
+                    key={index}
+                  >
+                    <div className="step-number">
+                      {index + 1}
+                    </div>
 
-              <h3>Akshara Ashok Kumar</h3>
+                    <div>
+                      <h3>
+                        Mapping Rule{" "}
+                        {index + 1}
+                      </h3>
 
-              <p>
-                Register No: 25BCE5279
-              </p>
+                      <p>
+                        {explanation}
+                      </p>
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+          </section>
+        )}
+              {/* =========================
+          HELP / USER MANUAL
+      ========================= */}
 
-              <p>
-                Role: Mapping Engine
-              </p>
+      <section
+        className="steps-section"
+        id="help"
+      >
+        <div className="section-heading">
+          <p className="tag">HELP</p>
+
+          <h2>User Manual</h2>
+
+          <p>
+            Follow these simple steps to use
+            the ER Diagram to Relational
+            Schema Mapper.
+          </p>
+        </div>
+
+        <div className="steps">
+          <div className="step">
+            <div className="step-number">
+              01
             </div>
 
-            <div className="schema-card team-card">
-              <div className="team-photo">
-                📷
-              </div>
-
-              <h3>A. Bapithamary</h3>
+            <div>
+              <h3>
+                Create an ER Diagram
+              </h3>
 
               <p>
-                Register No: 25BCE5787
-              </p>
-
-              <p>
-                Role: Output Dashboard & Documentation
+                Open the ER Builder and create
+                entities, attributes, primary
+                keys and relationships.
               </p>
             </div>
           </div>
 
-          <div className="schema-card guide-card">
-            <p className="tag">GUIDED BY</p>
+          <div className="step">
+            <div className="step-number">
+              02
+            </div>
 
-            <h3>Dr. Swaminathan A</h3>
+            <div>
+              <h3>
+                Add Attributes
+              </h3>
 
-            <p>Assistant Professor</p>
+              <p>
+                Add simple, composite,
+                multivalued or other supported
+                attributes to your entities.
+              </p>
+            </div>
           </div>
-        </section>
-      </main>
 
-      <footer>
+          <div className="step">
+            <div className="step-number">
+              03
+            </div>
+
+            <div>
+              <h3>
+                Define Relationships
+              </h3>
+
+              <p>
+                Add relationship types such as
+                1:1, 1:N and M:N between your
+                entities.
+              </p>
+            </div>
+          </div>
+
+          <div className="step">
+            <div className="step-number">
+              04
+            </div>
+
+            <div>
+              <h3>
+                Generate the Schema
+              </h3>
+
+              <p>
+                Use the Generate Relational
+                Schema option to send the ER
+                model to the mapping engine.
+              </p>
+            </div>
+          </div>
+
+          <div className="step">
+            <div className="step-number">
+              05
+            </div>
+
+            <div>
+              <h3>
+                Read the Output
+              </h3>
+
+              <p>
+                The generated tables show
+                attributes, primary keys and
+                foreign-key references.
+              </p>
+            </div>
+          </div>
+
+          <div className="step">
+            <div className="step-number">
+              06
+            </div>
+
+            <div>
+              <h3>
+                Check Mapping Steps
+              </h3>
+
+              <p>
+                Open Mapping Steps to
+                understand how each ER concept
+                was converted into relational
+                structures.
+              </p>
+            </div>
+          </div>
+
+          <div className="step">
+            <div className="step-number">
+              07
+            </div>
+
+            <div>
+              <h3>
+                Generate SQL
+              </h3>
+
+              <p>
+                Click Generate SQL to view the
+                SQL DDL statements for the
+                generated relational schema.
+              </p>
+            </div>
+          </div>
+
+          <div className="step">
+            <div className="step-number">
+              08
+            </div>
+
+            <div>
+              <h3>
+                Download the Report
+              </h3>
+
+              <p>
+                Download the generated report
+                containing the relational
+                schema, mapping explanation and
+                SQL.
+              </p>
+            </div>
+          </div>
+
+          <div className="step">
+            <div className="step-number">
+              09
+            </div>
+
+            <div>
+              <h3>
+                Use the Question Bank
+              </h3>
+
+              <p>
+                Practice DBMS questions using
+                source, topic, difficulty and
+                search filters.
+              </p>
+            </div>
+          </div>
+
+          <div className="step">
+            <div className="step-number">
+              10
+            </div>
+
+            <div>
+              <h3>
+                Change Day / Night Mode
+              </h3>
+
+              <p>
+                Use the theme button in the
+                navigation bar to switch between
+                Day and Night mode.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================
+          DEVELOPED BY
+      ========================= */}
+
+      <section
+        id="developed-by"
+        className="schema-section"
+      >
+        <div className="section-heading">
+          <p className="tag">
+            DEVELOPED BY
+          </p>
+
+          <h2>Our Team</h2>
+
+          <p>
+            Meet the student team behind the
+            ER Diagram to Relational Schema
+            Mapper.
+          </p>
+        </div>
+
+        <div className="team-grid">
+          {/* Isha */}
+
+          <div className="team-card">
+            <TeamPhoto
+  src="/team/isha-rajendra-rokade.jpg"
+  alt="Isha Rajendra Rokade"
+  initials="IR"
+/>
+
+            <div className="team-info">
+              <h3>
+                Isha Rajendra Rokade
+              </h3>
+
+              <p>
+                <strong>
+                  Register No:
+                </strong>{" "}
+                25BCE1667
+              </p>
+
+              <p>
+                <strong>Role:</strong>{" "}
+                ER Diagram Builder
+              </p>
+            </div>
+          </div>
+
+          {/* Akshara */}
+
+          <div className="team-card">
+            <TeamPhoto
+  src="/team/akshara-ashok-kumar.jpg"
+  alt="Akshara Ashok Kumar"
+  initials="AA"
+/>
+
+            <div className="team-info">
+              <h3>
+                Akshara Ashok Kumar
+              </h3>
+
+              <p>
+                <strong>
+                  Register No:
+                </strong>{" "}
+                25BCE5279
+              </p>
+
+              <p>
+                <strong>Role:</strong>{" "}
+                ER → Relational Mapping
+                Engine
+              </p>
+            </div>
+          </div>
+
+          {/* Bapithamary */}
+
+          <div className="team-card">
+           <TeamPhoto
+  src="/team/bapithamary.jpg"
+  alt="A. Bapithamary"
+  initials="BM"
+/>
+            <div className="team-info">
+              <h3>
+                A. Bapithamary
+              </h3>
+
+              <p>
+                <strong>
+                  Register No:
+                </strong>{" "}
+                25BCE5787
+              </p>
+
+              <p>
+                <strong>Role:</strong>{" "}
+                Output Dashboard &
+                Documentation
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* =========================
+            GUIDED BY
+        ========================= */}
+
+        <div className="guide-section">
+          <p className="tag">
+            GUIDED BY
+          </p>
+
+          <h2>
+            Project Guide
+          </h2>
+
+          <div
+            className="guide-card"
+            style={{
+              maxWidth: "360px",
+              margin: "0 auto",
+              padding: "25px",
+              borderRadius: "18px",
+              border: "1px solid #e5e7eb",
+              background: "#ffffff",
+              boxShadow:
+                "0 8px 24px rgba(0, 0, 0, 0.06)",
+            }}
+          >
+            <TeamPhoto
+  src="/team/dr-swaminathan-a.jpg"
+  alt="Dr. Swaminathan A"
+  initials="SA"
+/>
+            <div className="team-info">
+              <h3>
+                Dr. Swaminathan A
+              </h3>
+
+              <p>
+                <strong>
+                  Assistant Professor
+                </strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================
+          FOOTER
+      ========================= */}
+
+      <footer className="footer">
         <p>
-          ER Diagram to Relational Schema Mapper
+          ER Diagram to Relational Schema
+          Mapper — DBMS Virtual Lab
         </p>
 
         <p>
-          DBMS Virtual Lab Project
+          Guided by Dr. Swaminathan A,
+          Assistant Professor
         </p>
       </footer>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
