@@ -17,7 +17,9 @@ def validate_er_model(er_model: ERModel) -> list[str]:
     # ---------------------------------
 
     if not er_model.entities:
-        errors.append("ER model must contain at least one entity.")
+        errors.append(
+            "ER model must contain at least one entity."
+        )
 
     # ---------------------------------
     # 2. Check entity IDs and names
@@ -32,6 +34,7 @@ def validate_er_model(er_model: ERModel) -> list[str]:
             errors.append(
                 f"Duplicate entity ID: {entity.id}"
             )
+
         entity_ids.add(entity.id)
 
         if not entity.name.strip():
@@ -45,6 +48,7 @@ def validate_er_model(er_model: ERModel) -> list[str]:
             errors.append(
                 f"Duplicate entity name: {entity.name}"
             )
+
         entity_names.add(name_key)
 
         # ---------------------------------
@@ -169,12 +173,12 @@ def validate_er_model(er_model: ERModel) -> list[str]:
                 f"references unknown entity '{entity2_id}'."
             )
 
-        # Same entity on both sides is not valid for now
-        if entity1_id == entity2_id:
-            errors.append(
-                f"Relationship '{relationship.name}' "
-                f"must connect two distinct entities."
-            )
+        # Recursive relationships are valid.
+        # Example:
+        # EMPLOYEE -- SUPERVISION -- EMPLOYEE
+        #
+        # Therefore, entity1_id == entity2_id
+        # is allowed.
 
         # ---------------------------------
         # 8. Check cardinality
