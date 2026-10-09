@@ -241,19 +241,23 @@ Rules:
     except HTTPError as exc:
         try:
             error_body = exc.read().decode("utf-8", errors="replace")
-        except Exception:
-            error_body = ""
-        if exc.code in {400, 401, 403, 404}:
+            parsed_error = json.loads(error_body)
+            provider_error = parsed_error.get("error", {})
+            error_message = provider_error.get("message", "")
+        except (ValueError, AttributeError, TypeError):
+            error_message = ""
+
+        if isinstance(error_message, str) and error_message.strip():
+            safe_message = error_message.strip()[:500]
             raise HTTPException(
                 status_code=502,
-                detail=(
-                    "Gemini rejected the request. Check that GEMINI_API_KEY is valid "
-                    "and the selected model is available."
-                ),
+                detail=f"Gemini API returned HTTP {exc.code}: {safe_message}",
             ) from exc
+
         raise HTTPException(
             status_code=502,
-            detail=f"Gemini request failed with HTTP {exc.code}.",
+            detail=f"Gemini request failed with HTTP {exc.code}. "
+                   "The provider did not return a readable error message.",
         ) from exc
     except (URLError, TimeoutError) as exc:
         raise HTTPException(
