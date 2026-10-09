@@ -6,6 +6,7 @@ from .models import ERModel
 from .validator import validate_er_model
 from .mapper import map_er_to_relational
 from .sql_generator import generate_sql
+from .image_extraction import router as image_extraction_router
 
 
 app = FastAPI(
@@ -15,7 +16,7 @@ app = FastAPI(
 )
 
 
-# Allow the two frontend applications to communicate with the backend.
+# Allow frontend applications to communicate with the backend.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,6 +24,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(image_extraction_router)
 
 
 class MappingResponse(BaseModel):

@@ -1,6 +1,6 @@
 
-import { useState } from "react";
 import "./ProjectExtras.css";
+import ImageERExtractor from "./ImageERExtractor";
 
 type Attribute = {
   id: string;
@@ -294,9 +294,6 @@ const samples: {
 ];
 
 export default function ProjectExtras() {
-  const [diagramPreview, setDiagramPreview] = useState("");
-  const [diagramName, setDiagramName] = useState("");
-  const [uploadMessage, setUploadMessage] = useState("");
 
   function loadSample(model: ERModel) {
     try {
@@ -307,7 +304,7 @@ export default function ProjectExtras() {
       window.location.hash = "er-builder-section";
       window.location.reload();
     } catch {
-      setUploadMessage("Could not save the sample in browser storage.");
+      alert("Could not save the sample in browser storage.");
     }
   }
 
@@ -325,34 +322,6 @@ export default function ProjectExtras() {
     URL.revokeObjectURL(url);
   }
 
-  function readImage(file: File) {
-    if (!file.type.startsWith("image/")) {
-      setUploadMessage("Please select a valid image file.");
-      setDiagramPreview("");
-      setDiagramName("");
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadMessage("Please select an image smaller than 10 MB.");
-      setDiagramPreview("");
-      setDiagramName("");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setDiagramPreview(String(reader.result || ""));
-      setUploadMessage(
-        "Preview ready. Image-to-ER extraction is not implemented yet.",
-      );
-    };
-    reader.onerror = () => {
-      setUploadMessage("Could not read this image. Please try another file.");
-      setDiagramPreview("");
-    };
-    reader.readAsDataURL(file);
-  }
 
   return (
     <div className="project-extras">
@@ -393,42 +362,7 @@ export default function ProjectExtras() {
         </div>
       </section>
 
-      <section className="extras-section" id="diagram-image-upload">
-        <p className="extras-kicker">WORK FROM AN EXISTING DIAGRAM</p>
-        <h2>Upload an ER Diagram Image</h2>
-        <p className="extras-intro">
-          Upload a PNG or JPG to inspect it. Automatic detection and conversion
-          into editable entities and relationships is not yet available.
-        </p>
-
-        <label className="upload-control">
-          Choose ER diagram image
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                setDiagramName(file.name);
-                readImage(file);
-              }
-            }}
-          />
-        </label>
-
-        {diagramName && (
-          <p className="sample-meta">Selected: {diagramName}</p>
-        )}
-        {uploadMessage && <p role="status">{uploadMessage}</p>}
-
-        {diagramPreview && (
-          <img
-            className="diagram-preview"
-            src={diagramPreview}
-            alt="Uploaded ER diagram preview"
-          />
-        )}
-      </section>
+      <ImageERExtractor />
     </div>
   );
 }
