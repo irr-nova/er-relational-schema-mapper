@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import ProjectExtras from "./ProjectExtras";
 
 import "./App.css";
 
@@ -247,7 +248,7 @@ function App() {
     useState(false);
 
   const [showERBuilder, setShowERBuilder] =
-    useState(false);
+    useState(() => window.location.hash === "#er-builder-section");
 
   const [mappingResult, setMappingResult] =
     useState<MappingResult | null>(null);
@@ -775,6 +776,8 @@ END OF REPORT
               relational schema.
             </p>
           </div>
+
+          <ProjectExtras />
 
           <ERBuilder
             onMappingGenerated={
