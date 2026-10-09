@@ -14,7 +14,7 @@ router = APIRouter()
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 ALLOWED_MIME_TYPES = {"image/png", "image/jpeg", "image/webp"}
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.8-flash"
 
 
 class ImageExtractionRequest(BaseModel):
