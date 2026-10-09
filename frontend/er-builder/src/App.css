@@ -1,0 +1,660 @@
+/* =========================
+   App Layout
+   ========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: #f8fafc;
+  color: #111827;
+}
+
+button {
+  font-family: inherit;
+}
+
+.app {
+  width: 100%;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* =========================
+   Header
+   ========================= */
+
+.app-header {
+  padding: 20px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.app-header p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* =========================
+   Toolbar
+   ========================= */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  padding: 12px 16px;
+
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.toolbar button {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+
+  background: #ffffff;
+  color: #111827;
+
+  padding: 8px 14px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: #f3f4f6;
+}
+
+.toolbar button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toolbar button.danger {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.toolbar button.danger:hover {
+  background: #fef2f2;
+}
+
+/* =========================
+   React Flow Canvas
+   ========================= */
+
+.canvas-wrapper {
+  width: 100%;
+  height: 600px;
+
+  position: relative;
+
+  background: #f8fafc;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/*
+ * React Flow itself needs a parent with an actual
+ * width and height. This is important.
+ */
+
+.canvas-wrapper .react-flow {
+  width: 100%;
+  height: 100%;
+}
+
+/* =========================
+   Entity Node
+   ========================= */
+
+.entity-node {
+  min-width: 220px;
+
+  background: #ffffff;
+
+  border: 2px solid #374151;
+  border-radius: 6px;
+
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+
+  overflow: hidden;
+}
+
+.entity-node.weak-entity {
+  border: 4px double #374151;
+}
+
+/* Entity header */
+
+.entity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 8px 10px;
+
+  background: #f3f4f6;
+
+  border-bottom: 1px solid #d1d5db;
+}
+
+.entity-name {
+  font-weight: 700;
+  font-size: 15px;
+
+  color: #111827;
+
+  word-break: break-word;
+}
+
+.entity-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* =========================
+   Entity Attributes
+   ========================= */
+
+.attribute-list {
+  list-style: none;
+
+  margin: 0;
+  padding: 6px 8px;
+
+  background: #ffffff;
+}
+
+.attribute-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  min-height: 28px;
+
+  padding: 3px 2px;
+}
+
+.attribute-text {
+  flex: 1;
+
+  font-size: 13px;
+  color: #374151;
+
+  word-break: break-word;
+}
+
+.attribute-buttons {
+  display: flex;
+  gap: 2px;
+
+  flex-shrink: 0;
+}
+
+/* =========================
+   Icon Buttons
+   ========================= */
+
+.icon-btn {
+  border: none;
+
+  background: transparent;
+
+  padding: 3px;
+
+  border-radius: 4px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  line-height: 1;
+}
+
+.icon-btn:hover {
+  background: #e5e7eb;
+}
+
+.icon-btn.small {
+  font-size: 11px;
+  padding: 2px;
+}
+
+/* =========================
+   Add Attribute Button
+   ========================= */
+
+.add-attribute-btn {
+  width: calc(100% - 16px);
+
+  margin: 4px 8px 8px;
+
+  padding: 5px 8px;
+
+  border: 1px dashed #9ca3af;
+  border-radius: 4px;
+
+  background: #f9fafb;
+
+  color: #374151;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.add-attribute-btn:hover {
+  background: #f3f4f6;
+}
+
+/* =========================
+   Relationship Lines
+   ========================= */
+
+.relationship-line {
+  stroke: #374151;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* =========================
+   Relationship Label
+   ========================= */
+
+.relationship-label {
+  pointer-events: all;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 4px 7px;
+
+  background: rgba(255, 255, 255, 0.95);
+
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.relationship-name {
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #111827;
+
+  white-space: nowrap;
+}
+
+.relationship-cardinality {
+  margin-top: 2px;
+
+  font-size: 10px;
+
+  color: #6b7280;
+
+  white-space: nowrap;
+}
+
+.relationship-buttons {
+  display: flex;
+  gap: 3px;
+
+  margin-top: 3px;
+}
+
+/* =========================
+   Validation Panel
+   ========================= */
+
+.validation-panel {
+  margin: 10px 16px;
+  padding: 12px 14px;
+
+  background: #ffffff;
+
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+}
+
+.validation-panel ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+
+.validation-panel li {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.validation-ok {
+  margin: 0 0 10px;
+
+  color: #166534;
+  font-weight: 600;
+}
+
+.validation-panel button {
+  padding: 6px 10px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+/* =========================
+   Mapping Error
+   ========================= */
+
+.mapping-error-panel {
+  margin: 10px 16px;
+  padding: 12px 14px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+
+  color: #991b1b;
+}
+
+.mapping-error-panel strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.mapping-error-panel pre {
+  margin: 0 0 10px;
+
+  white-space: pre-wrap;
+
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.mapping-error-panel button {
+  padding: 6px 10px;
+
+  border: 1px solid #fecaca;
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+/* =========================
+   Mapping Result
+   ========================= */
+
+.mapping-result-panel {
+  padding: 24px;
+
+  background: #ffffff;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+.mapping-result-header h2 {
+  margin: 0;
+
+  font-size: 22px;
+  color: #111827;
+}
+
+.mapping-result-header p {
+  margin: 5px 0 20px;
+
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* =========================
+   Schema Tables
+   ========================= */
+
+.schema-tables {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+  gap: 16px;
+}
+
+.schema-table {
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+
+  overflow: hidden;
+
+  background: #ffffff;
+}
+
+.schema-table h3 {
+  margin: 0;
+
+  padding: 10px 12px;
+
+  background: #f3f4f6;
+
+  border-bottom: 1px solid #d1d5db;
+
+  font-size: 15px;
+}
+
+/* =========================
+   Schema Columns
+   ========================= */
+
+.schema-columns {
+  padding: 6px 10px;
+}
+
+.schema-column {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 7px 2px;
+
+  border-bottom: 1px solid #f3f4f6;
+
+  font-size: 13px;
+}
+
+.schema-column:last-child {
+  border-bottom: none;
+}
+
+.schema-column span:last-child {
+  color: #6b7280;
+}
+
+/* =========================
+   Schema Keys
+   ========================= */
+
+.schema-key {
+  padding: 8px 10px;
+
+  border-top: 1px solid #f3f4f6;
+
+  font-size: 12px;
+
+  color: #374151;
+}
+
+.schema-key ul {
+  margin: 5px 0 0;
+  padding-left: 18px;
+}
+
+/* =========================
+   Mapping Explanations
+   ========================= */
+
+.mapping-explanations {
+  margin-top: 20px;
+
+  padding: 16px;
+
+  background: #f9fafb;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+}
+
+.mapping-explanations h3 {
+  margin: 0 0 10px;
+
+  font-size: 16px;
+}
+
+.mapping-explanations ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.mapping-explanations li {
+  margin-bottom: 6px;
+
+  font-size: 13px;
+  color: #374151;
+}
+
+/* =========================
+   SQL Section
+   ========================= */
+
+.sql-section {
+  margin-top: 20px;
+}
+
+.sql-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+}
+
+.sql-header h3 {
+  margin: 0;
+
+  font-size: 16px;
+}
+
+.sql-header button {
+  padding: 6px 10px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+}
+
+.sql-header button:hover {
+  background: #f3f4f6;
+}
+
+.sql-section pre {
+  margin: 0;
+
+  padding: 16px;
+
+  overflow-x: auto;
+
+  background: #111827;
+
+  border-radius: 7px;
+}
+
+.sql-section code {
+  font-family: Consolas, "Courier New", monospace;
+
+  font-size: 13px;
+
+  color: #f9fafb;
+
+  white-space: pre;
+}
+
+/* =========================
+   React Flow Controls
+   ========================= */
+
+.react-flow__controls {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.react-flow__minimap {
+  border: 1px solid #d1d5db;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 700px) {
+  .app-header {
+    padding: 16px;
+  }
+
+  .app-header h1 {
+    font-size: 20px;
+  }
+
+  .toolbar {
+    padding: 10px;
+  }
+
+  .canvas-wrapper {
+    height: 500px;
+  }
+
+  .mapping-result-panel {
+    padding: 16px;
+  }
+}

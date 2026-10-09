@@ -1,0 +1,81 @@
+{
+    "entities": [
+      {
+        "id": "e1",
+        "name": "STUDENT",
+        "isWeak": false,
+        "attributes": [
+          {
+            "id": "a1",
+            "name": "StudentID",
+            "type": "simple",
+            "dataType": "integer",
+            "isPrimaryKey": true,
+            "isPartialKey": false,
+            "components": []
+          },
+          {
+            "id": "a2",
+            "name": "StudentName",
+            "type": "simple",
+            "dataType": "string",
+            "isPrimaryKey": false,
+            "isPartialKey": false,
+            "components": []
+          }
+        ]
+      },
+      {
+        "id": "e2",
+        "name": "COURSE",
+        "isWeak": false,
+        "attributes": [
+          {
+            "id": "a3",
+            "name": "CourseID",
+            "type": "simple",
+            "dataType": "integer",
+            "isPrimaryKey": true,
+            "isPartialKey": false,
+            "components": []
+          },
+          {
+            "id": "a4",
+            "name": "CourseName",
+            "type": "simple",
+            "dataType": "string",
+            "isPrimaryKey": false,
+            "isPartialKey": false,
+            "components": []
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "id": "r1",
+        "name": "ENROLLS",
+        "type": "regular",
+        "cardinality": "M:N",
+        "participation": {
+          "entity_1": "e1",
+          "entity_2": "e2"
+        },
+        "entities": [
+          "e1",
+          "e2"
+        ],
+        "attributes": [
+          {
+            "id": "a5",
+            "name": "EnrollmentDate",
+            "type": "simple",
+            "dataType": "date",
+            "isPrimaryKey": false,
+            "isPartialKey": false,
+            "components": []
+          }
+        ]
+      }
+    ]
+  }

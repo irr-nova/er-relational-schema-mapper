@@ -1,0 +1,46 @@
+{
+  "entities": [
+    {
+      "id": "entity_1",
+      "name": "STUDENT",
+      "isWeak": false,
+      "attributes": [
+        {
+          "id": "attr_1",
+          "name": "StudentID",
+          "type": "simple",
+          "dataType": "integer",
+          "isPrimaryKey": true,
+          "isPartialKey": false,
+          "components": []
+        },
+        {
+          "id": "attr_2",
+          "name": "Name",
+          "type": "simple",
+          "dataType": "string",
+          "isPrimaryKey": false,
+          "isPartialKey": false,
+          "components": []
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel_1",
+      "name": "ENROLLS",
+      "type": "binary",
+      "cardinality": "M:N",
+      "participation": {
+        "entity_1": "partial",
+        "entity_2": "partial"
+      },
+      "entities": [
+        "entity_1",
+        "entity_2"
+      ],
+      "attributes": []
+    }
+  ]
+}
