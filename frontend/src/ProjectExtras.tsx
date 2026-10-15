@@ -1,4 +1,3 @@
-
 import "./ProjectExtras.css";
 import ImageERExtractor from "./ImageERExtractor";
 
@@ -294,17 +293,28 @@ const samples: {
 ];
 
 export default function ProjectExtras() {
-
   function loadSample(model: ERModel) {
     try {
+      // Save the exact current theme, including correcting any stale value.
+      localStorage.setItem(
+        "darkMode",
+        String(document.body.classList.contains("dark-mode")),
+      );
+
+      // Keep the existing storage format expected by ERBuilder.
       localStorage.setItem(
         "er-builder-saved-state-v1",
         JSON.stringify({ model, positions: {} }),
       );
+
+      // The hash lets App.tsx open the builder on the next render.
       window.location.hash = "er-builder-section";
+
+      // Reload so ERBuilder initializes from the newly saved sample.
       window.location.reload();
-    } catch {
-      alert("Could not save the sample in browser storage.");
+    } catch (error) {
+      console.error("Could not load the sample ER diagram:", error);
+      alert("Could not load the sample. Please check browser storage settings.");
     }
   }
 
@@ -312,22 +322,26 @@ export default function ProjectExtras() {
     const blob = new Blob([JSON.stringify(model, null, 2)], {
       type: "application/json",
     });
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
+
     link.href = url;
     link.download = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.json`;
+
     document.body.appendChild(link);
     link.click();
     link.remove();
+
     URL.revokeObjectURL(url);
   }
-
 
   return (
     <div className="project-extras">
       <section className="extras-section" id="preloaded-diagrams">
         <p className="extras-kicker">START WITH AN EXAMPLE</p>
         <h2>Preloaded ER Diagrams</h2>
+
         <p className="extras-intro">
           Explore realistic multi-entity database designs. Load a model into
           the builder or download its JSON representation.
@@ -338,10 +352,12 @@ export default function ProjectExtras() {
             <article className="extras-card" key={sample.name}>
               <h3>{sample.name}</h3>
               <p>{sample.description}</p>
+
               <p className="sample-meta">
                 {sample.model.entities.length} entities ·{" "}
                 {sample.model.relationships.length} relationships
               </p>
+
               <div className="extras-actions">
                 <button
                   type="button"
@@ -349,6 +365,7 @@ export default function ProjectExtras() {
                 >
                   Load sample
                 </button>
+
                 <button
                   type="button"
                   className="secondary"

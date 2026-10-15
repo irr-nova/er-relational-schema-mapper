@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import ProjectExtras from "./ProjectExtras";
 
@@ -93,6 +92,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "ER Model",
     difficulty: "Easy",
   },
+
   {
     question: "What is normally created for an M:N relationship?",
     options: [
@@ -108,6 +108,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "ER → Relational Mapping",
     difficulty: "Easy",
   },
+
   {
     question: "What does PK stand for?",
     options: ["Primary Key", "Private Key", "Parent Key", "Partial Key"],
@@ -117,6 +118,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "Keys",
     difficulty: "Easy",
   },
+
   {
     question: "What does FK stand for?",
     options: ["Foreign Key", "Final Key", "First Key", "File Key"],
@@ -126,6 +128,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "Keys",
     difficulty: "Easy",
   },
+
   {
     question:
       "Which relationship cardinality normally requires a separate relation?",
@@ -137,6 +140,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "Cardinality",
     difficulty: "Easy",
   },
+
   {
     question:
       "Which attribute type can be divided into smaller meaningful components?",
@@ -153,6 +157,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "Attributes",
     difficulty: "Easy",
   },
+
   {
     question: "Which attribute may have multiple values for a single entity?",
     options: [
@@ -168,6 +173,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "Attributes",
     difficulty: "Easy",
   },
+
   {
     question:
       "Where is the primary key of the 1-side normally placed in a 1:N relationship?",
@@ -184,6 +190,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "ER → Relational Mapping",
     difficulty: "Medium",
   },
+
   {
     question:
       "What is commonly used together with an owner key to identify a weak entity?",
@@ -195,6 +202,7 @@ const practiceQuestions: PracticeQuestion[] = [
     topic: "Weak Entity",
     difficulty: "Medium",
   },
+
   {
     question:
       "What does a foreign key primarily help maintain between relations?",
@@ -215,7 +223,9 @@ const practiceQuestions: PracticeQuestion[] = [
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
+
   const [showSql, setShowSql] = useState(false);
+
   const [showExplanation, setShowExplanation] = useState(false);
 
   const [showERBuilder, setShowERBuilder] = useState(
@@ -233,7 +243,9 @@ function App() {
   >({});
 
   const [practiceSubmitted, setPracticeSubmitted] = useState(false);
+
   const [questionSource, setQuestionSource] = useState("All Sources");
+
   const [questionTopic, setQuestionTopic] = useState("All Topics");
 
   const [questionDifficulty, setQuestionDifficulty] =
@@ -284,19 +296,23 @@ function App() {
     });
 
     const url = URL.createObjectURL(blob);
+
     const link = document.createElement("a");
 
     link.href = url;
     link.download = filename;
 
     document.body.appendChild(link);
+
     link.click();
+
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
   };
 
   const activeTables = mappingResult?.relational_schema?.tables ?? [];
+
   const activeSql = mappingResult?.sql ?? "";
 
   const activeExplanations =
@@ -349,11 +365,14 @@ function App() {
 
   const handleMappingGenerated = (result: MappingResult) => {
     setMappingResult(result);
+
     setLoading(false);
 
     // Keep the ER Builder visible after mapping.
     setShowERBuilder(true);
+
     setShowSql(false);
+
     setShowExplanation(false);
 
     setTimeout(() => {
@@ -550,9 +569,13 @@ END OF REPORT
           </button>
 
           <button onClick={() => scrollTo("schema")}>Mapper</button>
+
           <button onClick={() => scrollTo("learn")}>Learn</button>
+
           <button onClick={() => scrollTo("practice")}>Question Bank</button>
+
           <button onClick={() => scrollTo("help")}>Help</button>
+
           <button onClick={() => scrollTo("developed-by")}>Developed By</button>
 
           <button
@@ -695,6 +718,7 @@ END OF REPORT
                 <div className="schema-card" key={table.name}>
                   <div className="card-title">
                     <h3>{table.name}</h3>
+
                     <span>TABLE</span>
                   </div>
 
@@ -713,7 +737,9 @@ END OF REPORT
                         key={column.name}
                       >
                         {isPrimary && "🔑 "}
+
                         {foreignKey && "🔗 "}
+
                         {column.name}
 
                         {foreignKey ? (
@@ -772,6 +798,8 @@ END OF REPORT
         )}
       </section>
 
+
+
       {/* =========================
           SQL OUTPUT
       ========================= */}
@@ -822,6 +850,7 @@ END OF REPORT
 
                 <div>
                   <h3>Mapping Rule {index + 1}</h3>
+
                   <p>{explanation}</p>
                 </div>
               </div>
@@ -848,21 +877,30 @@ END OF REPORT
 
         {/* ER MODEL BASICS */}
 
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto",
+          }}
+        >
           <div className="section-heading">
             <p className="tag">FUNDAMENTALS</p>
+
             <h2>ER Model Basics</h2>
           </div>
 
           <div className="steps">
             <div className="step">
               <div className="step-number">01</div>
+
               <div>
                 <h3>Entity</h3>
+
                 <p>
                   An entity represents a real-world object or concept that can
                   be uniquely identified, such as Student, Course or Employee.
                 </p>
+
                 <p>
                   <strong>Example:</strong> STUDENT, COURSE, EMPLOYEE
                 </p>
@@ -871,12 +909,15 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">02</div>
+
               <div>
                 <h3>Entity Set</h3>
+
                 <p>
                   An entity set is a collection of similar entities that share
                   the same attributes.
                 </p>
+
                 <p>
                   <strong>Example:</strong> all students in a university.
                 </p>
@@ -885,9 +926,12 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">03</div>
+
               <div>
                 <h3>Attribute</h3>
+
                 <p>Attributes describe the properties of an entity.</p>
+
                 <p>
                   <strong>Examples:</strong> StudentID, Name, Email and
                   CourseName.
@@ -897,12 +941,15 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">04</div>
+
               <div>
                 <h3>Relationship</h3>
+
                 <p>
                   A relationship describes an association between two or more
                   entities.
                 </p>
+
                 <p>
                   <strong>Example:</strong> STUDENT ENROLLS IN COURSE.
                 </p>
@@ -913,21 +960,30 @@ END OF REPORT
 
         {/* ATTRIBUTES */}
 
-        <div style={{ maxWidth: "1000px", margin: "70px auto 0" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
           <div className="section-heading">
             <p className="tag">ATTRIBUTES</p>
+
             <h2>Types of Attributes</h2>
           </div>
 
           <div className="steps">
             <div className="step">
               <div className="step-number">01</div>
+
               <div>
                 <h3>Simple Attribute</h3>
+
                 <p>
                   A simple attribute cannot be meaningfully divided into smaller
                   components.
                 </p>
+
                 <p>
                   <strong>Example:</strong> Gender.
                 </p>
@@ -936,12 +992,15 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">02</div>
+
               <div>
                 <h3>Composite Attribute</h3>
+
                 <p>
                   A composite attribute can be divided into smaller meaningful
                   components.
                 </p>
+
                 <p>
                   <strong>Example:</strong> Address → Street, City, PIN.
                 </p>
@@ -950,12 +1009,15 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">03</div>
+
               <div>
                 <h3>Multivalued Attribute</h3>
+
                 <p>
                   A multivalued attribute can contain multiple values for a
                   single entity.
                 </p>
+
                 <p>
                   <strong>Example:</strong> PhoneNumbers.
                 </p>
@@ -964,11 +1026,14 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">04</div>
+
               <div>
                 <h3>Derived Attribute</h3>
+
                 <p>
                   A derived attribute can be calculated from another attribute.
                 </p>
+
                 <p>
                   <strong>Example:</strong> Age derived from DateOfBirth.
                 </p>
@@ -979,20 +1044,29 @@ END OF REPORT
 
         {/* KEYS */}
 
-        <div style={{ maxWidth: "1000px", margin: "70px auto 0" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
           <div className="section-heading">
             <p className="tag">KEYS</p>
+
             <h2>Database Keys</h2>
           </div>
 
           <div className="steps">
             <div className="step">
               <div className="step-number">01</div>
+
               <div>
                 <h3>Primary Key</h3>
+
                 <p>
                   A primary key uniquely identifies each tuple in a relation.
                 </p>
+
                 <p>
                   <strong>Example:</strong> StudentID.
                 </p>
@@ -1001,8 +1075,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">02</div>
+
               <div>
                 <h3>Candidate Key</h3>
+
                 <p>
                   A candidate key is a minimal set of attributes that can
                   uniquely identify a tuple.
@@ -1012,9 +1088,12 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">03</div>
+
               <div>
                 <h3>Composite Key</h3>
+
                 <p>A composite key contains more than one attribute.</p>
+
                 <p>
                   <strong>Example:</strong> StudentID + CourseID.
                 </p>
@@ -1023,8 +1102,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">04</div>
+
               <div>
                 <h3>Foreign Key</h3>
+
                 <p>
                   A foreign key references a key in another relation and helps
                   maintain referential integrity.
@@ -1036,21 +1117,30 @@ END OF REPORT
 
         {/* RELATIONSHIPS */}
 
-        <div style={{ maxWidth: "1000px", margin: "70px auto 0" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
           <div className="section-heading">
             <p className="tag">RELATIONSHIPS</p>
+
             <h2>Relationship Cardinality</h2>
           </div>
 
           <div className="steps">
             <div className="step">
               <div className="step-number">1:1</div>
+
               <div>
                 <h3>One-to-One</h3>
+
                 <p>
                   One entity instance is associated with at most one instance of
                   the other entity.
                 </p>
+
                 <p>
                   <strong>Example:</strong> PERSON ↔ PASSPORT.
                 </p>
@@ -1059,12 +1149,15 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">1:N</div>
+
               <div>
                 <h3>One-to-Many</h3>
+
                 <p>
                   One entity instance can be related to many instances of
                   another entity.
                 </p>
+
                 <p>
                   <strong>Example:</strong> DEPARTMENT → EMPLOYEE.
                 </p>
@@ -1073,11 +1166,14 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">N:1</div>
+
               <div>
                 <h3>Many-to-One</h3>
+
                 <p>
                   Many entity instances can be related to one entity instance.
                 </p>
+
                 <p>
                   <strong>Example:</strong> EMPLOYEE → DEPARTMENT.
                 </p>
@@ -1086,12 +1182,15 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">M:N</div>
+
               <div>
                 <h3>Many-to-Many</h3>
+
                 <p>
                   Many instances on both sides can participate in the
                   relationship.
                 </p>
+
                 <p>
                   <strong>Example:</strong> STUDENT ↔ COURSE.
                 </p>
@@ -1102,17 +1201,25 @@ END OF REPORT
 
         {/* STRONG AND WEAK ENTITY */}
 
-        <div style={{ maxWidth: "1000px", margin: "70px auto 0" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
           <div className="section-heading">
             <p className="tag">SPECIAL ENTITIES</p>
+
             <h2>Strong &amp; Weak Entities</h2>
           </div>
 
           <div className="steps">
             <div className="step">
               <div className="step-number">01</div>
+
               <div>
                 <h3>Strong Entity</h3>
+
                 <p>
                   A strong entity has its own primary key and can be uniquely
                   identified independently.
@@ -1122,8 +1229,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">02</div>
+
               <div>
                 <h3>Weak Entity</h3>
+
                 <p>
                   A weak entity depends on an owner entity for identification.
                   It normally uses a partial key together with the owner's key.
@@ -1133,8 +1242,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">03</div>
+
               <div>
                 <h3>Partial Key</h3>
+
                 <p>
                   A partial key helps distinguish weak-entity instances
                   belonging to the same owner.
@@ -1146,17 +1257,25 @@ END OF REPORT
 
         {/* ER TO RELATIONAL MAPPING */}
 
-        <div style={{ maxWidth: "1000px", margin: "70px auto 0" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
           <div className="section-heading">
             <p className="tag">MAPPING RULES</p>
+
             <h2>ER to Relational Mapping</h2>
           </div>
 
           <div className="steps">
             <div className="step">
               <div className="step-number">01</div>
+
               <div>
                 <h3>Strong Entity Mapping</h3>
+
                 <p>
                   Each strong entity is normally converted into a relation.
                   Simple attributes become columns and the entity key becomes
@@ -1167,8 +1286,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">02</div>
+
               <div>
                 <h3>Composite Attribute Mapping</h3>
+
                 <p>
                   Components of a composite attribute are represented as
                   separate attributes in the relation.
@@ -1178,8 +1299,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">03</div>
+
               <div>
                 <h3>Multivalued Attribute Mapping</h3>
+
                 <p>
                   A multivalued attribute is normally represented using a
                   separate relation containing the owner's key and the
@@ -1190,8 +1313,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">04</div>
+
               <div>
                 <h3>1:1 Relationship Mapping</h3>
+
                 <p>
                   A foreign key from one participating relation can represent
                   the relationship, depending on participation and design
@@ -1202,8 +1327,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">05</div>
+
               <div>
                 <h3>1:N Relationship Mapping</h3>
+
                 <p>
                   The primary key of the 1-side is normally added as a foreign
                   key to the relation representing the N-side.
@@ -1213,8 +1340,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">06</div>
+
               <div>
                 <h3>M:N Relationship Mapping</h3>
+
                 <p>
                   An M:N relationship is normally converted into a separate
                   relation containing foreign keys referencing the participating
@@ -1225,8 +1354,10 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">07</div>
+
               <div>
                 <h3>Weak Entity Mapping</h3>
+
                 <p>
                   A weak entity is mapped to a relation containing its
                   attributes, owner entity key and the attributes needed to form
@@ -1239,10 +1370,20 @@ END OF REPORT
 
         {/* EDUCATIONAL VIDEO */}
 
-        <div style={{ maxWidth: "1000px", margin: "70px auto 0" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "70px auto 0",
+          }}
+        >
           <p className="tag">WATCH &amp; EXPLORE</p>
 
-          <h2 style={{ fontSize: "28px", margin: "5px 0 12px" }}>
+          <h2
+            style={{
+              fontSize: "28px",
+              margin: "5px 0 12px",
+            }}
+          >
             ER Diagram to Relational Table
           </h2>
 
@@ -1269,28 +1410,43 @@ END OF REPORT
 
         {/* REFERENCES */}
 
-        <div style={{ maxWidth: "1000px", margin: "60px auto 0" }}>
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "60px auto 0",
+          }}
+        >
           <p className="tag">REFERENCES</p>
 
-          <h2 style={{ fontSize: "28px", margin: "5px 0 20px" }}>
+          <h2
+            style={{
+              fontSize: "28px",
+              margin: "5px 0 20px",
+            }}
+          >
             Further Reading
           </h2>
 
           <div className="steps">
             <div className="step">
               <div className="step-number">01</div>
+
               <div>
                 <h3>Introduction to ER Model</h3>
+
                 <p>
                   Learn about entities, attributes, relationships and ER diagram
                   fundamentals.
                 </p>
+
                 <a
                   href="https://www.geeksforgeeks.org/dbms/introduction-of-er-model/"
                   target="_blank"
                   rel="noreferrer"
                   className="secondary-btn"
-                  style={{ marginTop: "12px" }}
+                  style={{
+                    marginTop: "12px",
+                  }}
                 >
                   Open Reference →
                 </a>
@@ -1299,18 +1455,23 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">02</div>
+
               <div>
                 <h3>ER Model to Relational Model</h3>
+
                 <p>
                   Study mapping rules for entities, relationships, keys and
                   special attributes.
                 </p>
+
                 <a
                   href="https://www.geeksforgeeks.org/dbms/mapping-from-er-model-to-relational-model/"
                   target="_blank"
                   rel="noreferrer"
                   className="secondary-btn"
-                  style={{ marginTop: "12px" }}
+                  style={{
+                    marginTop: "12px",
+                  }}
                 >
                   Open Reference →
                 </a>
@@ -1319,18 +1480,23 @@ END OF REPORT
 
             <div className="step">
               <div className="step-number">03</div>
+
               <div>
                 <h3>DBMS Learning Resource</h3>
+
                 <p>
                   Use additional DBMS learning material for database concepts
                   and exam preparation.
                 </p>
+
                 <a
                   href="https://www.geeksforgeeks.org/dbms/"
                   target="_blank"
                   rel="noreferrer"
                   className="secondary-btn"
-                  style={{ marginTop: "12px" }}
+                  style={{
+                    marginTop: "12px",
+                  }}
                 >
                   Open DBMS Resources →
                 </a>
@@ -1455,8 +1621,10 @@ END OF REPORT
           {filteredQuestions.length === 0 ? (
             <div className="step">
               <div className="step-number">!</div>
+
               <div>
                 <h3>No questions found</h3>
+
                 <p>
                   Try changing the source, topic, difficulty or search text.
                 </p>
@@ -1472,7 +1640,11 @@ END OF REPORT
                     {String(questionIndex + 1).padStart(2, "0")}
                   </div>
 
-                  <div style={{ width: "100%" }}>
+                  <div
+                    style={{
+                      width: "100%",
+                    }}
+                  >
                     <div
                       style={{
                         display: "flex",
@@ -1517,7 +1689,11 @@ END OF REPORT
 
                     <h3>{question.question}</h3>
 
-                    <div style={{ marginTop: "15px" }}>
+                    <div
+                      style={{
+                        marginTop: "15px",
+                      }}
+                    >
                       {question.options.map((option, optionIndex) => {
                         const selected =
                           practiceAnswers[originalIndex] === optionIndex;
@@ -1560,7 +1736,11 @@ END OF REPORT
                     </div>
 
                     {practiceSubmitted && (
-                      <p style={{ marginTop: "10px" }}>
+                      <p
+                        style={{
+                          marginTop: "10px",
+                        }}
+                      >
                         <strong>Explanation:</strong> {question.explanation}
                       </p>
                     )}
@@ -1613,8 +1793,10 @@ END OF REPORT
         <div className="steps">
           <div className="step">
             <div className="step-number">01</div>
+
             <div>
               <h3>Create an ER Diagram</h3>
+
               <p>
                 Open the ER Builder and create entities, attributes, primary
                 keys and relationships.
@@ -1624,8 +1806,10 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">02</div>
+
             <div>
               <h3>Add Attributes</h3>
+
               <p>
                 Add simple, composite, multivalued or other supported attributes
                 to your entities.
@@ -1635,8 +1819,10 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">03</div>
+
             <div>
               <h3>Define Relationships</h3>
+
               <p>
                 Add relationship types such as 1:1, 1:N and M:N between your
                 entities.
@@ -1646,8 +1832,10 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">04</div>
+
             <div>
               <h3>Generate the Schema</h3>
+
               <p>
                 Use the Generate Relational Schema option to send the ER model
                 to the mapping engine.
@@ -1657,8 +1845,10 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">05</div>
+
             <div>
               <h3>Read the Output</h3>
+
               <p>
                 The generated tables show attributes, primary keys and
                 foreign-key references.
@@ -1668,19 +1858,23 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">06</div>
+
             <div>
               <h3>Check Mapping Steps</h3>
+
               <p>
-                Click View Mapping Explanation to understand how each ER concept
-                was converted into relational structures.
+                Click View Mapping Explanation to understand how each ER concept was
+                converted into relational structures.
               </p>
             </div>
           </div>
 
           <div className="step">
             <div className="step-number">07</div>
+
             <div>
               <h3>Generate SQL</h3>
+
               <p>
                 Click Generate SQL to view the SQL DDL statements for the
                 generated relational schema.
@@ -1690,8 +1884,10 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">08</div>
+
             <div>
               <h3>Download the Report</h3>
+
               <p>
                 Download the generated report containing the relational schema,
                 mapping explanation and SQL.
@@ -1701,8 +1897,10 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">09</div>
+
             <div>
               <h3>Use the Question Bank</h3>
+
               <p>
                 Practice DBMS questions using source, topic, difficulty and
                 search filters.
@@ -1712,8 +1910,10 @@ END OF REPORT
 
           <div className="step">
             <div className="step-number">10</div>
+
             <div>
               <h3>Change Day / Night Mode</h3>
+
               <p>
                 Use the theme button in the navigation bar to switch between Day
                 and Night mode.
@@ -1751,9 +1951,11 @@ END OF REPORT
 
             <div className="team-info">
               <h3>Isha Rajendra Rokade</h3>
+
               <p>
                 <strong>Register No:</strong> 25BCE1667
               </p>
+
               <p>
                 <strong>Role:</strong> ER Diagram Builder
               </p>
@@ -1771,9 +1973,11 @@ END OF REPORT
 
             <div className="team-info">
               <h3>Akshara Ashok Kumar</h3>
+
               <p>
                 <strong>Register No:</strong> 25BCE5279
               </p>
+
               <p>
                 <strong>Role:</strong> ER → Relational Mapping Engine
               </p>
@@ -1790,11 +1994,13 @@ END OF REPORT
             />
             <div className="team-info">
               <h3>A. Bapithamary</h3>
+
               <p>
                 <strong>Register No:</strong> 25BCE5787
               </p>
+
               <p>
-                <strong>Role:</strong> Output Dashboard &amp; Documentation
+                <strong>Role:</strong> Output Dashboard & Documentation
               </p>
             </div>
           </div>
@@ -1828,6 +2034,7 @@ END OF REPORT
             />
             <div className="team-info">
               <h3>Dr. Swaminathan A</h3>
+
               <p>
                 <strong>Assistant Professor</strong>
               </p>
@@ -1842,6 +2049,7 @@ END OF REPORT
 
       <footer className="footer">
         <p>ER Diagram to Relational Schema Mapper — DBMS Virtual Lab</p>
+
         <p>Guided by Dr. Swaminathan A, Assistant Professor</p>
       </footer>
     </div>
