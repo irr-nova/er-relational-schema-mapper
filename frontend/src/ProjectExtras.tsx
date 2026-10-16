@@ -308,13 +308,15 @@ export default function ProjectExtras() {
       );
 
       // The hash lets App.tsx open the builder on the next render.
-      window.location.hash = "er-builder-section";
+      window.location.hash = "#/builder";
 
       // Reload so ERBuilder initializes from the newly saved sample.
       window.location.reload();
     } catch (error) {
       console.error("Could not load the sample ER diagram:", error);
-      alert("Could not load the sample. Please check browser storage settings.");
+      alert(
+        "Could not load the sample. Please check browser storage settings.",
+      );
     }
   }
 
@@ -343,8 +345,8 @@ export default function ProjectExtras() {
         <h2>Preloaded ER Diagrams</h2>
 
         <p className="extras-intro">
-          Explore realistic multi-entity database designs. Load a model into
-          the builder or download its JSON representation.
+          Explore realistic multi-entity database designs. Load a model into the
+          builder or download its JSON representation.
         </p>
 
         <div className="extras-grid">
@@ -359,10 +361,7 @@ export default function ProjectExtras() {
               </p>
 
               <div className="extras-actions">
-                <button
-                  type="button"
-                  onClick={() => loadSample(sample.model)}
-                >
+                <button type="button" onClick={() => loadSample(sample.model)}>
                   Load sample
                 </button>
 
