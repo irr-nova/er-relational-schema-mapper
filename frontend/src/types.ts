@@ -40,4 +40,4 @@ export type ErModel = {
   [key: string]: unknown;
 };
 
-export type View = "home" | "builder" | "output" | "practice" | "help" | "developed" | "learn";
+export type View = "home" | "builder" | "output" | "practice" | "ai-quiz" | "help" | "developed";

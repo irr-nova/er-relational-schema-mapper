@@ -1,391 +1,207 @@
+import { useEffect, useState } from "react";
+import { sourceLabel, type Question } from "../data/questionBank";
 
-import { useState } from "react";
-import type { CSSProperties } from "react";
-import type { Question } from "../data/questionBank";
-
-type QuizRunnerProps = {
+type Props = {
   questions: Question[];
   heading: string;
   onExit: () => void;
+  onComplete?: (result: QuizResult) => Promise<string>;
 };
 
-export default function QuizRunner({
-  questions,
-  heading,
-  onExit,
-}: QuizRunnerProps) {
+export type QuizResult = { score: number; total: number; topicStats: { topic: string; correct: number; total: number }[]; missedQuestions: Question[] };
+
+// Runs one quiz: one question at a time, check answer, explanation, score,
+// and a "retry incorrect" round. Re-mount it (change `key`) to start a new set.
+export default function QuizRunner({ questions, heading, onExit, onComplete }: Props) {
+  const [round, setRound] = useState<Question[]>(questions);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [finished, setFinished] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [score, setScore] = useState(0);
+  const [missed, setMissed] = useState<Question[]>([]);
+  const [done, setDone] = useState(false);
+  const [correctByTopic, setCorrectByTopic] = useState<Record<string, number>>({});
+  const [analysis, setAnalysis] = useState("");
+  const [analysisState, setAnalysisState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [analysisError, setAnalysisError] = useState("");
 
-  const question = questions[index];
-
-  const score = questions.reduce(
-    (total, item, i) =>
-      total + (answers[i] === item.answer ? 1 : 0),
-    0
-  );
-
-  function selectAnswer(optionIndex: number) {
-    if (selected !== null) return;
-
-    setSelected(optionIndex);
-    setAnswers((previous) => ({
-      ...previous,
-      [index]: optionIndex,
-    }));
-  }
-
-  function nextQuestion() {
-    if (index < questions.length - 1) {
-      setIndex((previous) => previous + 1);
-      setSelected(null);
-    } else {
-      setFinished(true);
-    }
-  }
-
-  function restartQuiz() {
+  const startRound = (next: Question[]) => {
+    setRound(next);
     setIndex(0);
     setSelected(null);
-    setAnswers({});
-    setFinished(false);
+    setChecked(false);
+    setScore(0);
+    setMissed([]);
+    setCorrectByTopic({});
+    setAnalysis("");
+    setAnalysisState("idle");
+    setDone(false);
+  };
+
+  const current = round[index];
+
+  useEffect(() => {
+    if (!done || !onComplete || analysisState !== "idle") return;
+    setAnalysisState("loading");
+    const topicTotals = round.reduce<Record<string, number>>((totals, question) => {
+      totals[question.topic] = (totals[question.topic] ?? 0) + 1;
+      return totals;
+    }, {});
+    const topicStats = Object.entries(topicTotals).map(([topic, total]) => ({ topic, total, correct: correctByTopic[topic] ?? 0 }));
+    onComplete({ score, total: round.length, topicStats, missedQuestions: missed })
+      .then((value) => { setAnalysis(value); setAnalysisState("ready"); })
+      .catch((error: unknown) => { setAnalysisError(error instanceof Error ? error.message : "Could not generate analysis."); setAnalysisState("error"); });
+  }, [done, analysisState]);
+
+  const check = () => {
+    if (selected === null || !current) return;
+    if (selected === current.answer) {
+      setScore((s) => s + 1);
+      setCorrectByTopic((topics) => ({ ...topics, [current.topic]: (topics[current.topic] ?? 0) + 1 }));
+    } else {
+      setMissed((m) => [...m, current]);
+    }
+    setChecked(true);
+  };
+
+  const next = () => {
+    if (index + 1 < round.length) {
+      setIndex((i) => i + 1);
+      setSelected(null);
+      setChecked(false);
+    } else {
+      setDone(true);
+    }
+  };
+
+  if (done) {
+    const pct = Math.round((score / round.length) * 100);
+    return (
+      <div className="card quiz-card" role="status">
+        <p className="tag">QUIZ COMPLETE</p>
+        <h3>
+          {score} / {round.length} <span className="quiz-pct">({pct}%)</span>
+        </h3>
+        <p className="muted">
+          {pct === 100
+            ? "Perfect score. Try a harder difficulty or another topic."
+            : missed.length
+              ? `You missed ${missed.length} question${missed.length > 1 ? "s" : ""}. Review them below or retry just those.`
+              : "Nice work."}
+        </p>
+
+        {onComplete && <section className="ai-analysis" aria-live="polite"><h4>AI performance analysis</h4>
+          {analysisState === "loading" && <p className="muted">Generating your feedback report…</p>}
+          {analysisState === "ready" && <p className="analysis-copy">{analysis}</p>}
+          {analysisState === "error" && <div className="error-box"><p>{analysisError}</p><button className="secondary-btn" onClick={() => setAnalysisState("idle")}>Retry analysis</button></div>}
+        </section>}
+
+        {missed.length > 0 && (
+          <div className="missed-list">
+            {missed.map((q) => (
+              <div className="missed-item" key={q.id}>
+                <strong>{q.question}</strong>
+                <div className="muted">
+                  Correct answer: {q.options[q.answer]}. {q.explanation}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="btn-row">
+          {missed.length > 0 && (
+            <button className="primary-btn" onClick={() => startRound(missed)}>
+              Retry {missed.length} incorrect
+            </button>
+          )}
+          <button className="secondary-btn" onClick={() => startRound(questions)}>
+            Restart this set
+          </button>
+          <button className="secondary-btn" onClick={onExit}>
+            Back
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  if (questions.length === 0) {
+  if (!current) {
     return (
-      <div style={styles.card}>
-        <h2>No questions available</h2>
-        <button style={styles.secondaryButton} onClick={onExit}>
+      <div className="card quiz-card">
+        <p>No questions to show.</p>
+        <button className="secondary-btn" onClick={onExit}>
           Back
         </button>
       </div>
     );
   }
 
-  if (finished) {
-    return (
-      <div style={styles.card}>
-        <p style={styles.eyebrow}>{heading}</p>
-        <h2>Quiz completed!</h2>
-
-        <div style={styles.scoreBox}>
-          <p>Your score</p>
-          <h1>
-            {score} / {questions.length}
-          </h1>
-          <p>
-            {Math.round((score / questions.length) * 100)}% correct
-          </p>
-        </div>
-
-        <div style={styles.buttonRow}>
-          <button style={styles.primaryButton} onClick={restartQuiz}>
-            Try again
-          </button>
-          <button style={styles.secondaryButton} onClick={onExit}>
-            Back to practice
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!question) return null;
-
-  const answered = selected !== null;
-
   return (
-    <div style={styles.card}>
-      <div style={styles.header}>
-        <div>
-          <p style={styles.eyebrow}>{heading}</p>
-          <h2>
-            Question {index + 1} of {questions.length}
-          </h2>
-        </div>
-
-        <button style={styles.exitButton} onClick={onExit}>
-          Exit quiz
-        </button>
-      </div>
-
-      <div style={styles.progressTrack}>
-        <div
-          style={{
-            ...styles.progressBar,
-            width: `${((index + 1) / questions.length) * 100}%`,
-          }}
-        />
-      </div>
-
-      <div style={styles.badges}>
-        <span style={styles.badge}>{question.topic}</span>
-        <span style={styles.badge}>{question.difficulty}</span>
-        <span style={styles.badge}>
-          {question.reference ?? question.source}
+    <div className="card quiz-card">
+      <div className="quiz-top">
+        <p className="tag">{heading}</p>
+        <span className="muted">
+          Question {index + 1} of {round.length} &middot; Score {score}
         </span>
       </div>
-
-      {/* YEAR DISPLAY */}
-      <div style={styles.yearBox}>
-        <span style={styles.yearLabel}>QUESTION YEAR</span>
-        <span style={styles.yearValue}>
-          {question.year ?? "Not specified"}
-        </span>
+      <div className="progress" aria-hidden="true">
+        <div className="progress-fill" style={{ width: `${(index / round.length) * 100}%` }} />
       </div>
 
-      <h3 style={styles.question}>{question.question}</h3>
+      <div className="badges">
+        <span className="badge">{current.topic}</span>
+        <span className={`badge diff-${current.difficulty.toLowerCase()}`}>{current.difficulty}</span>
+        <span className="badge badge-source">{sourceLabel(current)}</span>
+      </div>
 
-      <div style={styles.options}>
-        {question.options.map((option, optionIndex) => {
-          const correct = optionIndex === question.answer;
-          const chosen = optionIndex === selected;
+      <h3 className="quiz-question">{current.question}</h3>
 
-          const optionStyle: CSSProperties = {
-            ...styles.option,
-            background:
-              answered && correct
-                ? "#e8f8ee"
-                : chosen
-                  ? "#fff0f0"
-                  : "#ffffff",
-            borderColor:
-              answered && correct
-                ? "#219653"
-                : chosen
-                  ? "#d64545"
-                  : "#d7dce5",
-          };
-
+      <div className="quiz-options" role="radiogroup" aria-label="Answer options">
+        {current.options.map((option, i) => {
+          let state = "";
+          if (checked) {
+            if (i === current.answer) state = "correct";
+            else if (i === selected) state = "wrong";
+          } else if (i === selected) {
+            state = "selected";
+          }
           return (
             <button
-              type="button"
-              key={optionIndex}
-              style={optionStyle}
-              disabled={answered}
-              onClick={() => selectAnswer(optionIndex)}
+              key={i}
+              role="radio"
+              aria-checked={i === selected}
+              className={`quiz-option ${state}`}
+              disabled={checked}
+              onClick={() => setSelected(i)}
             >
-              <span style={styles.optionLetter}>
-                {String.fromCharCode(65 + optionIndex)}
-              </span>
-              <span>{option}</span>
+              <span className="opt-letter">{String.fromCharCode(65 + i)}</span>
+              {option}
             </button>
           );
         })}
       </div>
 
-      {answered && (
-        <div
-          style={{
-            ...styles.explanationBox,
-            background:
-              selected === question.answer ? "#e8f8ee" : "#fff7e6",
-          }}
-        >
-          <strong>
-            {selected === question.answer
-              ? "Correct answer!"
-              : `Incorrect. Correct answer: ${String.fromCharCode(
-                  65 + question.answer
-                )}.`}
-          </strong>
-          <p>{question.explanation}</p>
+      {checked && (
+        <div className={`feedback ${selected === current.answer ? "ok" : "bad"}`} role="status">
+          <strong>{selected === current.answer ? "Correct." : "Not quite."}</strong> {current.explanation}
         </div>
       )}
 
-      <div style={styles.footer}>
-        <span style={styles.muted}>
-          Answered: {Object.keys(answers).length} / {questions.length}
-        </span>
-
-        <button
-          style={{
-            ...styles.primaryButton,
-            opacity: answered ? 1 : 0.5,
-          }}
-          disabled={!answered}
-          onClick={nextQuestion}
-        >
-          {index === questions.length - 1
-            ? "Finish quiz"
-            : "Next question"}
+      <div className="btn-row">
+        {!checked ? (
+          <button className="primary-btn" onClick={check} disabled={selected === null}>
+            Check answer
+          </button>
+        ) : (
+          <button className="primary-btn" onClick={next}>
+            {index + 1 < round.length ? "Next question →" : "See results"}
+          </button>
+        )}
+        <button className="secondary-btn" onClick={onExit}>
+          Quit
         </button>
       </div>
     </div>
   );
 }
-
-const styles: Record<string, CSSProperties> = {
-  card: {
-    boxSizing: "border-box",
-    width: "100%",
-    padding: "24px",
-    margin: "20px auto",
-    border: "1px solid #e1e5ec",
-    borderRadius: "16px",
-    background: "#ffffff",
-    color: "#202838",
-    boxShadow: "0 5px 20px rgba(20,35,60,0.06)",
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "12px",
-    flexWrap: "wrap",
-  },
-  eyebrow: {
-    margin: "0 0 8px",
-    color: "#5865a8",
-    fontSize: "12px",
-    fontWeight: 800,
-    letterSpacing: "1px",
-  },
-  exitButton: {
-    padding: "8px 12px",
-    border: "none",
-    background: "transparent",
-    color: "#5865a8",
-    cursor: "pointer",
-    fontWeight: 700,
-  },
-  progressTrack: {
-    height: "7px",
-    margin: "20px 0",
-    overflow: "hidden",
-    borderRadius: "20px",
-    background: "#e9edf5",
-  },
-  progressBar: {
-    height: "100%",
-    borderRadius: "20px",
-    background: "#5865a8",
-    transition: "width 0.2s ease",
-  },
-  badges: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "8px",
-    marginBottom: "16px",
-  },
-  badge: {
-    padding: "6px 10px",
-    borderRadius: "20px",
-    background: "#f0f2f9",
-    color: "#414c78",
-    fontSize: "12px",
-    fontWeight: 700,
-  },
-  yearBox: {
-    display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: "12px",
-    padding: "12px 16px",
-    marginBottom: "20px",
-    border: "1px solid #cdd6ff",
-    borderRadius: "10px",
-    background: "#e8edff",
-  },
-  yearLabel: {
-    color: "#263b80",
-    fontSize: "12px",
-    fontWeight: 800,
-    letterSpacing: "1px",
-  },
-  yearValue: {
-    color: "#263b80",
-    fontSize: "20px",
-    fontWeight: 800,
-  },
-  question: {
-    margin: "0 0 22px",
-    fontSize: "19px",
-    lineHeight: 1.65,
-    whiteSpace: "pre-wrap",
-  },
-  options: {
-    display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr)",
-    gap: "12px",
-  },
-  option: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "14px",
-    border: "1px solid",
-    borderRadius: "10px",
-    color: "#202838",
-    textAlign: "left",
-    fontSize: "15px",
-    lineHeight: 1.5,
-    cursor: "pointer",
-  },
-  optionLetter: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    width: "30px",
-    height: "30px",
-    borderRadius: "8px",
-    background: "#f0f2f9",
-    fontWeight: 800,
-  },
-  explanationBox: {
-    padding: "16px",
-    marginTop: "20px",
-    borderRadius: "10px",
-    lineHeight: 1.6,
-  },
-  footer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: "12px",
-    marginTop: "24px",
-  },
-  muted: {
-    color: "#697386",
-    fontSize: "13px",
-  },
-  buttonRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "12px",
-    marginTop: "20px",
-  },
-  primaryButton: {
-    padding: "12px 18px",
-    border: "none",
-    borderRadius: "9px",
-    background: "#5865a8",
-    color: "#ffffff",
-    fontSize: "14px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  secondaryButton: {
-    padding: "12px 18px",
-    border: "1px solid #d7dce5",
-    borderRadius: "9px",
-    background: "#ffffff",
-    color: "#30394c",
-    fontSize: "14px",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  scoreBox: {
-    padding: "24px",
-    marginTop: "20px",
-    borderRadius: "12px",
-    background: "#f5f6ff",
-    textAlign: "center",
-  },
-};

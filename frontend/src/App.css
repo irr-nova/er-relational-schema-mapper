@@ -620,22 +620,6 @@ body.dark-mode .nav-links button.active {
   color: #e0e7ff;
 }
 
-.nav-links button.nav-learn {
-  border: 1px solid var(--c-primary);
-  color: var(--c-primary);
-  font-weight: 700;
-  margin-left: 6px;
-}
-
-body.dark-mode .nav-links button.nav-learn {
-  color: #c7d2fe;
-}
-
-.nav-links button.nav-learn.active {
-  background: var(--c-primary);
-  color: #fff;
-}
-
 /* ---------- generic building blocks ---------- */
 
 main {
@@ -1555,24 +1539,6 @@ body.dark-mode .navbar .nav-links button.active {
   color: #fff;
 }
 
-.navbar .nav-links button.nav-learn,
-body.dark-mode .navbar .nav-links button.nav-learn,
-.navbar .nav-links button.nav-learn:hover,
-.navbar .nav-links button.nav-learn.active {
-  background: var(--g-hot);
-  border: none;
-  color: #fff;
-  font-weight: 700;
-}
-
-.navbar .nav-links button.nav-learn:hover {
-  filter: brightness(1.08);
-}
-
-.navbar .nav-links button.nav-learn.active {
-  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.35);
-}
-
 /* ---------- buttons ---------- */
 
 .primary-btn,
@@ -1820,6 +1786,31 @@ body.dark-mode .tabs button.active {
 .quiz-card {
   margin-left: auto;
   margin-right: auto;
+}
+
+.source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ai-analysis {
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid var(--c-border);
+  border-left: 5px solid #7c3aed;
+  border-radius: 12px;
+  background: var(--c-surface-2);
+}
+
+.ai-analysis h4 {
+  margin: 0 0 8px;
+}
+
+.analysis-copy {
+  margin: 0;
+  line-height: 1.7;
+  white-space: pre-wrap;
 }
 
 .progress-fill {

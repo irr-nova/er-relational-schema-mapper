@@ -30,11 +30,11 @@ export default function Home({ hasMapping, onNavigate }: Props) {
             <button className="primary-btn" onClick={() => onNavigate(hasMapping ? "output" : "builder")}>
               {hasMapping ? "View Generated Schema" : "Create ER Diagram"} &rarr;
             </button>
-            <button className="secondary-btn" onClick={() => onNavigate("learn")}>
-              Learn ER Mapping
-            </button>
             <button className="secondary-btn" onClick={() => onNavigate("practice")}>
-              Practice
+              Competitive Exam Practice
+            </button>
+            <button className="secondary-btn" onClick={() => onNavigate("ai-quiz")}>
+              AI Quiz
             </button>
           </div>
         </div>
