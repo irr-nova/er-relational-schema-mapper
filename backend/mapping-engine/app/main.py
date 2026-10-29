@@ -7,6 +7,7 @@ from .validator import validate_er_model
 from .mapper import map_er_to_relational
 from .sql_generator import generate_sql
 from .image_extraction import router as image_extraction_router
+from .quiz import router as quiz_router
 
 
 app = FastAPI(
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(image_extraction_router)
+app.include_router(quiz_router)
 
 
 class MappingResponse(BaseModel):

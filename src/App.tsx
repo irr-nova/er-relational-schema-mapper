@@ -10,19 +10,20 @@ import type { ErModel, MappingResult, View } from "./types";
 import DevelopedBy from "./views/DevelopedBy";
 import Help from "./views/Help";
 import Home from "./views/Home";
-import Learn from "./views/Learn";
 import Practice from "./views/Practice";
+import AiQuiz from "./views/AiQuiz";
 
 const NAV: { id: View; label: string }[] = [
   { id: "home", label: "Home" },
   { id: "builder", label: "ER Builder" },
   { id: "output", label: "Schema & SQL" },
-  { id: "practice", label: "Practice" },
+  { id: "practice", label: "Competitive Exam Practice" },
+  { id: "ai-quiz", label: "AI Quiz" },
   { id: "help", label: "Help" },
   { id: "developed", label: "Developed By" },
 ];
 
-const ALL_VIEWS: View[] = ["home", "builder", "output", "practice", "help", "developed", "learn"];
+const ALL_VIEWS: View[] = ["home", "builder", "output", "practice", "ai-quiz", "help", "developed"];
 
 function viewFromHash(): View {
   const id = window.location.hash.replace(/^#\/?/, "") as View;
@@ -158,14 +159,6 @@ function App() {
           ))}
 
           <button
-            className={`nav-learn${view === "learn" ? " active" : ""}`}
-            aria-current={view === "learn" ? "page" : undefined}
-            onClick={() => navigate("learn")}
-          >
-            Learn
-          </button>
-
-          <button
             className="theme-btn"
             onClick={() => setDarkMode((d) => !d)}
             aria-label={darkMode ? "Switch to day mode" : "Switch to night mode"}
@@ -221,7 +214,7 @@ function App() {
         )}
 
         {view === "practice" && <Practice />}
-        {view === "learn" && <Learn />}
+        {view === "ai-quiz" && <AiQuiz />}
         {view === "help" && <Help />}
         {view === "developed" && <DevelopedBy />}
       </main>

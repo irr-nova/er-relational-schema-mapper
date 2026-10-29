@@ -4,7 +4,7 @@ const steps: { title: string; points: string[] }[] = [
     points: [
       "It converts an Entity-Relationship (ER) diagram into a relational database schema.",
       "It shows the primary keys, foreign keys and the reason for every mapping decision, then generates SQL CREATE TABLE statements.",
-      "It also teaches the topic: Learn, a question bank and AI-generated practice quizzes.",
+      "It also includes verified competitive exam questions and AI-generated practice quizzes.",
     ],
   },
   {
@@ -32,7 +32,7 @@ const steps: { title: string; points: string[] }[] = [
       "View Mapping Explanation: explains why each table, key and foreign key was created.",
       "Download Report: saves the full report as Text, Word document or PDF (use Print / Save as PDF).",
       "Moon / sun button: switches between Night and Day mode.",
-      "Practice: the question bank and AI Practice quizzes. Learn: study material, a worked example, videos and references.",
+      "Competitive Exam Practice: browse verified past questions with exam and year filters. AI Quiz: generate a 50-question topic quiz with a scorecard and feedback.",
     ],
   },
   {
@@ -63,7 +63,7 @@ const steps: { title: string; points: string[] }[] = [
     title: "8. Something went wrong. What now?",
     points: [
       "If the schema fails, read the validation messages and fix the entity, key or relationship they mention.",
-      "If image upload or AI Practice shows an error, press Retry. These services can be busy. You can keep using the Question Bank meanwhile.",
+      "If image upload or AI Quiz shows an error, press Retry. These services can be busy. Competitive Exam Practice remains available meanwhile.",
       "If nothing loads, make sure the backend is running.",
     ],
   },
