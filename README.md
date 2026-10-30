@@ -1,27 +1,7 @@
-# ER Mapper frontend (stand-alone)
+# ER Diagram to Relational Schema Mapper
 
-Requires Node.js 18 or newer.
+**Live app:** [er-relational-schema-mapper.onrender.com](https://er-relational-schema-mapper.onrender.com/)
 
-    npm install
-    npm run dev
+The current application is maintained and deployed from the [`develop` branch](https://github.com/irr-nova/er-relational-schema-mapper/tree/develop). It includes an ER Builder, schema and SQL output, competitive exam practice, AI quizzes, and a 72-question offline DBMS bank.
 
-Open the address shown in the terminal (usually http://localhost:5173).
-
-- Home, Learn, Help, Practice (Question Bank) and Developed By work without a backend.
-- ER Builder is a stand-in here: click "Load demo schema" to see the schema, SQL and downloadable report.
-- AI Practice needs the backend endpoint POST /api/generate-quiz; until it exists it shows an error with a Retry button.
-- To use the real backend set VITE_API_BASE in a .env file, e.g. VITE_API_BASE=http://127.0.0.1:8000
-
-To use this inside the team repo, copy only the `src/` files except `src/er-builder/ERBuilder.jsx`, `src/main.tsx` and `src/vite-env.d.ts`.
-
-## AI Practice (needs a quiz server)
-
-The AI Practice tab calls `POST http://127.0.0.1:8000/api/generate-quiz`. To run it yourself:
-
-1. Create an Anthropic API key at console.anthropic.com.
-2. In a second terminal, inside this folder:
-   - PowerShell: `$env:ANTHROPIC_API_KEY="your-key"; npm run quiz-server`
-   - cmd: `set ANTHROPIC_API_KEY=your-key && npm run quiz-server`
-3. Keep `npm run dev` running in the first terminal, then open Practice, then AI Practice.
-
-If the real backend already runs on port 8000, use `backend-quiz/generate_quiz.py` there instead.
+For current local setup, Gemini configuration, backend instructions, and deployment details, see the [current project README](https://github.com/irr-nova/er-relational-schema-mapper/blob/develop/README.md). The default `main` branch is not the source used by the live Render deployment.
