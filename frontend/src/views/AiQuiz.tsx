@@ -168,7 +168,7 @@ export default function AiQuiz() {
       </div>
       <div className="btn-row"><button className="primary-btn" disabled={status === "loading"} onClick={() => generate()}>{status === "loading" ? "Generating 50 questions…" : "Generate 50-question quiz"}</button></div>
       {status === "loading" && <p className="muted" role="status">{wakingBackend ? "Waking up the quiz service if it has been idle…" : `Generating questions ${progress}–${Math.min(progress + BATCH_SIZE, 50)} of 50 in short batches. Please keep this page open.`}</p>}
-      {status === "error" && <div className="error-box" role="alert"><strong>Could not generate the quiz.</strong> {message}<div className="btn-row"><button className="secondary-btn" onClick={() => generate(lastParams.current)}>Retry AI generation</button><button className="primary-btn" onClick={useOfflineBank}>Use built-in 50-question bank</button></div><p className="muted">The built-in bank has 73 unique DBMS questions and works without the AI service.</p></div>}
+      {status === "error" && <div className="error-box" role="alert"><strong>Could not generate the quiz.</strong> {message}<div className="btn-row"><button className="secondary-btn" onClick={() => generate(lastParams.current)}>Retry AI generation</button><button className="primary-btn" onClick={useOfflineBank}>Use built-in 50-question bank</button></div><p className="muted">The built-in bank has {QUESTION_BANK.length} unique DBMS questions and works without the AI service.</p></div>}
     </div>
   </section>;
 }
