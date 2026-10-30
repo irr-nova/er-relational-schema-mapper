@@ -1,27 +1,54 @@
-# ER Mapper frontend (stand-alone)
+# ER Diagram to Relational Schema Mapper
 
-Requires Node.js 18 or newer.
+This repository contains a web app for building ER diagrams, mapping them to relational schemas, generating SQL, and practicing DBMS topics. The active app deployed on Render is in `frontend/`; the FastAPI service used by the app is in `backend/mapping-engine/`.
 
-    npm install
-    npm run dev
+**Live app:** [er-relational-schema-mapper.onrender.com](https://er-relational-schema-mapper.onrender.com/)
 
-Open the address shown in the terminal (usually http://localhost:5173).
+## Run the active frontend
 
-- Home, Learn, Help, Practice (Question Bank) and Developed By work without a backend.
-- ER Builder is a stand-in here: click "Load demo schema" to see the schema, SQL and downloadable report.
-- AI Practice needs the backend endpoint POST /api/generate-quiz; until it exists it shows an error with a Retry button.
-- To use the real backend set VITE_API_BASE in a .env file, e.g. VITE_API_BASE=http://127.0.0.1:8000
+Use Node.js `^20.19.0` or `>=22.12.0` (the requirement of the Vite version used by `frontend/`). In Git Bash:
 
-To use this inside the team repo, copy only the `src/` files except `src/er-builder/ERBuilder.jsx`, `src/main.tsx` and `src/vite-env.d.ts`.
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
-## AI Practice (needs a quiz server)
+Open the local URL printed by Vite. By default, the frontend API client points to the deployed API. To use a local backend instead, create `frontend/.env`:
 
-The AI Practice tab calls `POST http://127.0.0.1:8000/api/generate-quiz`. To run it yourself:
+```dotenv
+VITE_API_BASE=http://127.0.0.1:8000
+```
 
-1. Create an Anthropic API key at console.anthropic.com.
-2. In a second terminal, inside this folder:
-   - PowerShell: `$env:ANTHROPIC_API_KEY="your-key"; npm run quiz-server`
-   - cmd: `set ANTHROPIC_API_KEY=your-key && npm run quiz-server`
-3. Keep `npm run dev` running in the first terminal, then open Practice, then AI Practice.
+## Run the backend locally
 
-If the real backend already runs on port 8000, use `backend-quiz/generate_quiz.py` there instead.
+In a second Bash terminal:
+
+```bash
+cd backend/mapping-engine
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+export GEMINI_API_KEY='your-gemini-api-key'
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+On macOS or Linux, activate the environment with `source .venv/bin/activate` instead.
+
+The backend also serves mapping and image-to-ER endpoints. `GEMINI_API_KEY` is needed for image extraction, AI question generation, and AI feedback; keep it in the backend environment and never in frontend code. The quiz service defaults to `gemini-3.8-flash`; `GEMINI_MODEL` can override the quiz model.
+
+## Practice sections
+
+- **Competitive Exam Practice** contains a curated set of DBMS questions with links to official papers and answer sources. Filter by exam, year, and topic; company interview questions are not included.
+- **AI Quiz** requests 50 questions in batches of 10 and asks the AI service for feedback on the score and topic results. Its question navigator lets users revisit questions, track answered or unanswered status, and mark questions for review.
+- The 72-question built-in offline bank can be opened from AI Quiz setup or while a quiz is in progress. Users can browse all questions or take a 50-question quiz sampled from the bank. Offline score analysis is calculated in the browser. Built-in practice questions are not verified past exam questions.
+
+## Build the deployed frontend
+
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+Render's static site uses branch `develop`, root directory `frontend/`, build command `npm ci && npm run build`, and publish directory `dist`. The API is a separate Render web service rooted at `backend/mapping-engine/`, started with `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.

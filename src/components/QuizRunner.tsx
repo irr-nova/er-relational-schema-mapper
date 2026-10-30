@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sourceLabel, type Question } from "../data/questionBank";
 
 type Props = {
   questions: Question[];
   heading: string;
   onExit: () => void;
+  onComplete?: (result: QuizResult) => Promise<string>;
 };
+
+export type QuizResult = { score: number; total: number; topicStats: { topic: string; correct: number; total: number }[]; missedQuestions: Question[] };
 
 // Runs one quiz: one question at a time, check answer, explanation, score,
 // and a "retry incorrect" round. Re-mount it (change `key`) to start a new set.
-export default function QuizRunner({ questions, heading, onExit }: Props) {
+export default function QuizRunner({ questions, heading, onExit, onComplete }: Props) {
   const [round, setRound] = useState<Question[]>(questions);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -17,6 +20,10 @@ export default function QuizRunner({ questions, heading, onExit }: Props) {
   const [score, setScore] = useState(0);
   const [missed, setMissed] = useState<Question[]>([]);
   const [done, setDone] = useState(false);
+  const [correctByTopic, setCorrectByTopic] = useState<Record<string, number>>({});
+  const [analysis, setAnalysis] = useState("");
+  const [analysisState, setAnalysisState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [analysisError, setAnalysisError] = useState("");
 
   const startRound = (next: Question[]) => {
     setRound(next);
@@ -25,15 +32,32 @@ export default function QuizRunner({ questions, heading, onExit }: Props) {
     setChecked(false);
     setScore(0);
     setMissed([]);
+    setCorrectByTopic({});
+    setAnalysis("");
+    setAnalysisState("idle");
     setDone(false);
   };
 
   const current = round[index];
 
+  useEffect(() => {
+    if (!done || !onComplete || analysisState !== "idle") return;
+    setAnalysisState("loading");
+    const topicTotals = round.reduce<Record<string, number>>((totals, question) => {
+      totals[question.topic] = (totals[question.topic] ?? 0) + 1;
+      return totals;
+    }, {});
+    const topicStats = Object.entries(topicTotals).map(([topic, total]) => ({ topic, total, correct: correctByTopic[topic] ?? 0 }));
+    onComplete({ score, total: round.length, topicStats, missedQuestions: missed })
+      .then((value) => { setAnalysis(value); setAnalysisState("ready"); })
+      .catch((error: unknown) => { setAnalysisError(error instanceof Error ? error.message : "Could not generate analysis."); setAnalysisState("error"); });
+  }, [done, analysisState]);
+
   const check = () => {
     if (selected === null || !current) return;
     if (selected === current.answer) {
       setScore((s) => s + 1);
+      setCorrectByTopic((topics) => ({ ...topics, [current.topic]: (topics[current.topic] ?? 0) + 1 }));
     } else {
       setMissed((m) => [...m, current]);
     }
@@ -65,6 +89,12 @@ export default function QuizRunner({ questions, heading, onExit }: Props) {
               ? `You missed ${missed.length} question${missed.length > 1 ? "s" : ""}. Review them below or retry just those.`
               : "Nice work."}
         </p>
+
+        {onComplete && <section className="ai-analysis" aria-live="polite"><h4>AI performance analysis</h4>
+          {analysisState === "loading" && <p className="muted">Generating your feedback report…</p>}
+          {analysisState === "ready" && <p className="analysis-copy">{analysis}</p>}
+          {analysisState === "error" && <div className="error-box"><p>{analysisError}</p><button className="secondary-btn" onClick={() => setAnalysisState("idle")}>Retry analysis</button></div>}
+        </section>}
 
         {missed.length > 0 && (
           <div className="missed-list">

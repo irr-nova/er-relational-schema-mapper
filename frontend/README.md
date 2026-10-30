@@ -1,32 +1,26 @@
-# React + TypeScript + Vite
+# Active ER Mapper frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This is the React and TypeScript frontend deployed by the project's Render static site. It contains the ER Builder, Schema & SQL view, Competitive Exam Practice, AI Quiz, Help, and Developed By sections. The ER Builder includes diagram editing, sample diagrams, image upload, schema mapping, and report downloads.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Requires Node.js `^20.19.0` or `>=22.12.0`.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The API client defaults to `https://er-relational-schema-mapper-api.onrender.com`. To use a local FastAPI backend, create `.env` in this directory:
+
+```dotenv
+VITE_API_BASE=http://127.0.0.1:8000
+```
+
+See the repository's top-level `README.md` for backend setup and Render deployment settings. Build the frontend with `npm run build`.
+
+## Question practice
+
+Competitive Exam Practice lets users filter the curated, source-linked questions by exam, year, and topic, browse the answer explanations, or take a quiz. AI Quiz generates 50 questions through five backend requests of 10 questions each and requests an AI feedback report when the quiz is submitted. Its question navigator tracks answered and unanswered questions, supports jumping back to any question, and lets users mark questions for review.
+
+The offline bank can be opened from AI Quiz setup or while a quiz is in progress, even when AI generation is working. It contains 72 team-written practice questions that users can browse in full or use for a 50-question quiz. Offline quizzes select unique questions and calculate score feedback locally; these practice questions are not official past exam questions.
