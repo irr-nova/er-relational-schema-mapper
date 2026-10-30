@@ -7,17 +7,20 @@ type Props = {
   onExit: () => void;
   onComplete?: (result: QuizResult) => Promise<string>;
   analysisTitle?: string;
+  onBrowseBank?: () => void;
 };
 
 export type QuizResult = { score: number; total: number; topicStats: { topic: string; correct: number; total: number }[]; missedQuestions: Question[] };
 
-// Runs one quiz: one question at a time, check answer, explanation, score,
-// and a "retry incorrect" round. Re-mount it (change `key`) to start a new set.
-export default function QuizRunner({ questions, heading, onExit, onComplete, analysisTitle = "AI performance analysis" }: Props) {
+// Runs one quiz with a revisitable question navigator, review markers,
+// explanations, scorecard, and a "retry incorrect" round.
+export default function QuizRunner({ questions, heading, onExit, onComplete, analysisTitle = "AI performance analysis", onBrowseBank }: Props) {
   const [round, setRound] = useState<Question[]>(questions);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [checked, setChecked] = useState(false);
+  const [selections, setSelections] = useState<Record<number, number>>({});
+  const [checkedQuestions, setCheckedQuestions] = useState<number[]>([]);
+  const [reviewQuestions, setReviewQuestions] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [missed, setMissed] = useState<Question[]>([]);
   const [done, setDone] = useState(false);
@@ -30,7 +33,9 @@ export default function QuizRunner({ questions, heading, onExit, onComplete, ana
     setRound(next);
     setIndex(0);
     setSelected(null);
-    setChecked(false);
+    setSelections({});
+    setCheckedQuestions([]);
+    setReviewQuestions([]);
     setScore(0);
     setMissed([]);
     setCorrectByTopic({});
@@ -52,27 +57,30 @@ export default function QuizRunner({ questions, heading, onExit, onComplete, ana
     onComplete({ score, total: round.length, topicStats, missedQuestions: missed })
       .then((value) => { setAnalysis(value); setAnalysisState("ready"); })
       .catch((error: unknown) => { setAnalysisError(error instanceof Error ? error.message : "Could not generate analysis."); setAnalysisState("error"); });
-  }, [done, analysisState]);
+  }, [done, analysisState, onComplete, round, score, correctByTopic, missed]);
 
   const check = () => {
-    if (selected === null || !current) return;
-    if (selected === current.answer) {
-      setScore((s) => s + 1);
-      setCorrectByTopic((topics) => ({ ...topics, [current.topic]: (topics[current.topic] ?? 0) + 1 }));
-    } else {
-      setMissed((m) => [...m, current]);
-    }
-    setChecked(true);
+    if (selected === null || !current || checkedQuestions.includes(index)) return;
+    setCheckedQuestions((items) => [...items, index]);
   };
 
-  const next = () => {
-    if (index + 1 < round.length) {
-      setIndex((i) => i + 1);
-      setSelected(null);
-      setChecked(false);
-    } else {
-      setDone(true);
-    }
+  const goTo = (nextIndex: number) => {
+    if (nextIndex < 0 || nextIndex >= round.length) return;
+    setIndex(nextIndex);
+    setSelected(selections[nextIndex] ?? null);
+  };
+
+  const finish = () => {
+    const topicCorrect: Record<string, number> = {};
+    const missedQuestions = round.filter((question, questionIndex) => {
+      const answer = selections[questionIndex];
+      if (answer === question.answer) topicCorrect[question.topic] = (topicCorrect[question.topic] ?? 0) + 1;
+      return answer !== question.answer;
+    });
+    setScore(round.length - missedQuestions.length);
+    setMissed(missedQuestions);
+    setCorrectByTopic(topicCorrect);
+    setDone(true);
   };
 
   if (done) {
@@ -122,6 +130,7 @@ export default function QuizRunner({ questions, heading, onExit, onComplete, ana
           <button className="secondary-btn" onClick={onExit}>
             Back
           </button>
+          {onBrowseBank && <button className="secondary-btn" onClick={onBrowseBank}>Browse offline bank</button>}
         </div>
       </div>
     );
@@ -138,13 +147,36 @@ export default function QuizRunner({ questions, heading, onExit, onComplete, ana
     );
   }
 
+  const checked = checkedQuestions.includes(index);
+  const markedForReview = reviewQuestions.includes(index);
+
   return (
+    <div className="quiz-layout">
+    <aside className="quiz-navigator" aria-label="Question status and navigation">
+      <h3>Questions</h3>
+      <p className="muted">Select a number to revisit a question.</p>
+      <div className="quiz-status-legend">
+        <span><i className="status-dot unanswered" />Unanswered</span>
+        <span><i className="status-dot answered" />Answered</span>
+        <span><i className="status-dot review" />Marked for review</span>
+        <span><i className="status-dot answered-review" />Answered and marked</span>
+      </div>
+      <div className="question-grid">
+        {round.map((question, questionIndex) => {
+          const hasAnswer = selections[questionIndex] !== undefined;
+          const isReview = reviewQuestions.includes(questionIndex);
+          const status = isReview ? (hasAnswer ? "answered-review" : "review") : hasAnswer ? "answered" : "unanswered";
+          const statusLabel = isReview ? (hasAnswer ? "answered and marked for review" : "marked for review") : hasAnswer ? "answered" : "unanswered";
+          return <button key={question.id} type="button" className={`question-jump ${status} ${questionIndex === index ? "current" : ""}`} onClick={() => goTo(questionIndex)} aria-label={`Question ${questionIndex + 1}, ${statusLabel}`} aria-current={questionIndex === index ? "step" : undefined}>{questionIndex + 1}</button>;
+        })}
+      </div>
+      {onBrowseBank && <button className="secondary-btn bank-open-btn" onClick={onBrowseBank}>Open offline question bank</button>}
+      <button className="primary-btn finish-quiz-btn" onClick={finish}>Finish quiz</button>
+    </aside>
     <div className="card quiz-card">
       <div className="quiz-top">
         <p className="tag">{heading}</p>
-        <span className="muted">
-          Question {index + 1} of {round.length} &middot; Score {score}
-        </span>
+        <span className="muted">Question {index + 1} of {round.length} &middot; Answered {Object.keys(selections).length}</span>
       </div>
       <div className="progress" aria-hidden="true">
         <div className="progress-fill" style={{ width: `${(index / round.length) * 100}%` }} />
@@ -174,7 +206,7 @@ export default function QuizRunner({ questions, heading, onExit, onComplete, ana
               aria-checked={i === selected}
               className={`quiz-option ${state}`}
               disabled={checked}
-              onClick={() => setSelected(i)}
+              onClick={() => { setSelected(i); setSelections((items) => ({ ...items, [index]: i })); }}
             >
               <span className="opt-letter">{String.fromCharCode(65 + i)}</span>
               {option}
@@ -189,20 +221,16 @@ export default function QuizRunner({ questions, heading, onExit, onComplete, ana
         </div>
       )}
 
-      <div className="btn-row">
-        {!checked ? (
-          <button className="primary-btn" onClick={check} disabled={selected === null}>
-            Check answer
-          </button>
-        ) : (
-          <button className="primary-btn" onClick={next}>
-            {index + 1 < round.length ? "Next question →" : "See results"}
-          </button>
-        )}
+      <div className="quiz-actions">
+        <button className={`secondary-btn review-toggle ${markedForReview ? "is-marked" : ""}`} onClick={() => setReviewQuestions((items) => markedForReview ? items.filter((item) => item !== index) : [...items, index])}>{markedForReview ? "Unmark review" : "Mark for review"}</button>
+        {!checked && <button className="primary-btn" onClick={check} disabled={selected === null}>Check answer</button>}
+        <button className="secondary-btn" onClick={() => goTo(index - 1)} disabled={index === 0}>← Previous</button>
+        <button className="secondary-btn" onClick={() => goTo(index + 1)} disabled={index + 1 === round.length}>Next →</button>
         <button className="secondary-btn" onClick={onExit}>
           Quit
         </button>
       </div>
+    </div>
     </div>
   );
 }

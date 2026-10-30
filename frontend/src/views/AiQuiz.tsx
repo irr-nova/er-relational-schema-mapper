@@ -73,6 +73,7 @@ export default function AiQuiz() {
   const [progress, setProgress] = useState(0);
   const [wakingBackend, setWakingBackend] = useState(false);
   const [usingOfflineBank, setUsingOfflineBank] = useState(false);
+  const [browsingBank, setBrowsingBank] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [runKey, setRunKey] = useState(0);
   const lastParams = useRef<Params>({ topic, difficulty, count: 50 });
@@ -136,6 +137,7 @@ export default function AiQuiz() {
   };
 
   const useOfflineBank = () => {
+    setBrowsingBank(false);
     setQuestions(createOfflineSet(topic, difficulty));
     setUsingOfflineBank(true);
     setRunKey((key) => key + 1);
@@ -153,10 +155,26 @@ export default function AiQuiz() {
     }
   };
 
+  const bankBrowser = <div className="offline-bank-browser" aria-labelledby="offline-bank-heading">
+    <div className="section-heading"><p className="tag">OFFLINE QUESTION BANK</p><h2 id="offline-bank-heading">All {QUESTION_BANK.length} DBMS practice questions</h2><p>Browse every built-in question, its options, correct answer, and explanation. These are available without generating an AI quiz.</p></div>
+    <div className="btn-row bank-actions"><button className="primary-btn" onClick={useOfflineBank}>Start a 50-question offline quiz</button><button className="secondary-btn" onClick={() => setBrowsingBank(false)}>{status === "ready" ? "Return to current quiz" : "Back to AI quiz"}</button></div>
+    <div className="bank-browse-grid">{QUESTION_BANK.map((question, index) => <article className="card bank-question" key={question.id}>
+      <div className="quiz-top"><strong>Question {index + 1}</strong><span className="badge">{question.topic}</span><span className={`badge diff-${question.difficulty.toLowerCase()}`}>{question.difficulty}</span></div>
+      <h3>{question.question}</h3>
+      <ol type="A" className="browse-options">{question.options.map((option, optionIndex) => <li key={optionIndex} className={optionIndex === question.answer ? "ok" : ""}>{option}</li>)}</ol>
+      <p className="bank-explanation"><strong>Answer: {String.fromCharCode(65 + question.answer)}.</strong> {question.explanation}</p>
+    </article>)}</div>
+  </div>;
+
   if (status === "ready") return <section className="page-section" aria-label="AI quiz">
-    {usingOfflineBank && <div className="card fallback-notice"><strong>Offline question bank</strong><p>Gemini was unavailable, so this quiz uses 50 unique questions from the built-in DBMS bank. It prioritizes your selected topic and difficulty, then includes other topics to reach 50. The scorecard analysis is calculated locally.</p><button className="secondary-btn" onClick={() => setStatus("idle")}>Back to quiz setup</button></div>}
-    <QuizRunner key={runKey} questions={questions} heading={usingOfflineBank ? "OFFLINE DBMS PRACTICE" : `AI QUIZ · ${topic.toUpperCase()}`} onExit={() => setStatus("idle")} onComplete={usingOfflineBank ? async (result) => localAnalysis(result) : analyze} analysisTitle={usingOfflineBank ? "Quiz performance analysis" : "AI performance analysis"} />
+    {usingOfflineBank && !browsingBank && <div className="card fallback-notice"><strong>Offline question bank</strong><p>This quiz uses 50 unique questions from the built-in DBMS bank. It prioritizes your selected topic and difficulty, then includes other topics to reach 50. The scorecard analysis is calculated locally.</p><div className="btn-row"><button className="secondary-btn" onClick={() => setStatus("idle")}>Back to quiz setup</button><button className="secondary-btn" onClick={() => setBrowsingBank(true)}>Browse all questions</button></div></div>}
+    {browsingBank && bankBrowser}
+    <div className="quiz-runner-wrap" style={{ display: browsingBank ? "none" : undefined }} aria-hidden={browsingBank}>
+      <QuizRunner key={runKey} questions={questions} heading={usingOfflineBank ? "OFFLINE DBMS PRACTICE" : `AI QUIZ · ${topic.toUpperCase()}`} onExit={() => setStatus("idle")} onComplete={usingOfflineBank ? async (result) => localAnalysis(result) : analyze} analysisTitle={usingOfflineBank ? "Quiz performance analysis" : "AI performance analysis"} onBrowseBank={() => setBrowsingBank(true)} />
+    </div>
   </section>;
+
+  if (browsingBank) return <section className="page-section" aria-label="offline question bank">{bankBrowser}</section>;
 
   return <section className="page-section" aria-labelledby="ai-quiz-heading">
     <div className="section-heading"><p className="tag">AI QUIZ</p><h2 id="ai-quiz-heading">A Fresh 50-Question DBMS Quiz</h2><p>Generate a new AI-written quiz on ER modelling, relational mapping, keys, normalization, and constraints. Finish it for a scorecard and personalized AI feedback.</p></div>
@@ -169,6 +187,7 @@ export default function AiQuiz() {
       <div className="btn-row"><button className="primary-btn" disabled={status === "loading"} onClick={() => generate()}>{status === "loading" ? "Generating 50 questions…" : "Generate 50-question quiz"}</button></div>
       {status === "loading" && <p className="muted" role="status">{wakingBackend ? "Waking up the quiz service if it has been idle…" : `Generating questions ${progress}–${Math.min(progress + BATCH_SIZE, 50)} of 50 in short batches. Please keep this page open.`}</p>}
       {status === "error" && <div className="error-box" role="alert"><strong>Could not generate the quiz.</strong> {message}<div className="btn-row"><button className="secondary-btn" onClick={() => generate(lastParams.current)}>Retry AI generation</button><button className="primary-btn" onClick={useOfflineBank}>Use built-in 50-question bank</button></div><p className="muted">The built-in bank has {QUESTION_BANK.length} unique DBMS questions and works without the AI service.</p></div>}
+      <div className="offline-access"><div><strong>Practice without AI</strong><p className="muted">The {QUESTION_BANK.length}-question built-in bank is always available.</p></div><div className="btn-row"><button className="secondary-btn" disabled={status === "loading"} onClick={useOfflineBank}>Start offline quiz</button><button className="secondary-btn" disabled={status === "loading"} onClick={() => setBrowsingBank(true)}>Browse all questions</button></div></div>
     </div>
   </section>;
 }
