@@ -52,7 +52,3 @@ npm run build
 ```
 
 Render's static site uses branch `develop`, root directory `frontend/`, build command `npm ci && npm run build`, and publish directory `dist`. The API is a separate Render web service rooted at `backend/mapping-engine/`, started with `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-
-## Other project folders
-
-`standalone-ai-version/` and `frontend/er-builder/` are separate prototypes; they are not the frontend deployed on Render. The root-level `src/` and root `package.json` are also from an earlier app setup. Make active product changes in `frontend/src/` and backend service changes in `backend/mapping-engine/`.
