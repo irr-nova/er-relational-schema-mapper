@@ -6,13 +6,14 @@ type Props = {
   heading: string;
   onExit: () => void;
   onComplete?: (result: QuizResult) => Promise<string>;
+  analysisTitle?: string;
 };
 
 export type QuizResult = { score: number; total: number; topicStats: { topic: string; correct: number; total: number }[]; missedQuestions: Question[] };
 
 // Runs one quiz: one question at a time, check answer, explanation, score,
 // and a "retry incorrect" round. Re-mount it (change `key`) to start a new set.
-export default function QuizRunner({ questions, heading, onExit, onComplete }: Props) {
+export default function QuizRunner({ questions, heading, onExit, onComplete, analysisTitle = "AI performance analysis" }: Props) {
   const [round, setRound] = useState<Question[]>(questions);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -90,7 +91,7 @@ export default function QuizRunner({ questions, heading, onExit, onComplete }: P
               : "Nice work."}
         </p>
 
-        {onComplete && <section className="ai-analysis" aria-live="polite"><h4>AI performance analysis</h4>
+        {onComplete && <section className="ai-analysis" aria-live="polite"><h4>{analysisTitle}</h4>
           {analysisState === "loading" && <p className="muted">Generating your feedback report…</p>}
           {analysisState === "ready" && <p className="analysis-copy">{analysis}</p>}
           {analysisState === "error" && <div className="error-box"><p>{analysisError}</p><button className="secondary-btn" onClick={() => setAnalysisState("idle")}>Retry analysis</button></div>}

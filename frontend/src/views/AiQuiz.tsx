@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import QuizRunner, { type QuizResult } from "../components/QuizRunner";
 import { API_BASE } from "../config";
-import { DIFFICULTIES, TOPICS, type Difficulty, type Question } from "../data/questionBank";
+import { DIFFICULTIES, QUESTION_BANK, TOPICS, type Difficulty, type Question } from "../data/questionBank";
 
 type Params = { topic: string; difficulty: Difficulty; count: 50 };
 type Status = "idle" | "loading" | "error" | "ready";
@@ -27,6 +27,44 @@ function parseQuestions(data: unknown, topic: string, difficulty: Difficulty, ex
   return parsed;
 }
 
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function createOfflineSet(topic: string, difficulty: Difficulty): Question[] {
+  const matches = QUESTION_BANK.filter((q) =>
+    (topic === "All DBMS Topics" || q.topic === topic) && q.difficulty === difficulty,
+  );
+  const preferred = shuffle(matches);
+  const used = new Set(preferred.map((q) => q.id));
+  const remaining = shuffle(QUESTION_BANK.filter((q) => !used.has(q.id)));
+  return [...preferred, ...remaining].slice(0, 50).map((q, index) => ({
+    ...q,
+    id: `offline-${Date.now()}-${index}`,
+    source: "Practice",
+    reference: "Built-in offline question bank",
+    year: undefined,
+  }));
+}
+
+function localAnalysis(result: QuizResult): string {
+  const topics = [...result.topicStats].sort((a, b) =>
+    a.correct / Math.max(a.total, 1) - b.correct / Math.max(b.total, 1),
+  );
+  const weakest = topics[0];
+  const strongest = topics.at(-1);
+  const lines = [`You scored ${result.score} out of ${result.total}.`];
+  if (strongest) lines.push(`Strongest area: ${strongest.topic} (${strongest.correct}/${strongest.total}).`);
+  if (weakest && weakest.topic !== strongest?.topic) lines.push(`Review next: ${weakest.topic} (${weakest.correct}/${weakest.total}).`);
+  lines.push("Use the explanations for missed questions, then restart the set to practice again. This report is calculated locally from your answers.");
+  return lines.join(" ");
+}
+
 export default function AiQuiz() {
   const [topic, setTopic] = useState<string>("All DBMS Topics");
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
@@ -34,6 +72,7 @@ export default function AiQuiz() {
   const [message, setMessage] = useState("");
   const [progress, setProgress] = useState(0);
   const [wakingBackend, setWakingBackend] = useState(false);
+  const [usingOfflineBank, setUsingOfflineBank] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [runKey, setRunKey] = useState(0);
   const lastParams = useRef<Params>({ topic, difficulty, count: 50 });
@@ -43,6 +82,7 @@ export default function AiQuiz() {
     setStatus("loading");
     setMessage("");
     setProgress(0);
+    setUsingOfflineBank(false);
     try {
       // Render's free API service sleeps when idle. Wake it before starting a
       // long Gemini request so its cold-start delay doesn't consume the batch timeout.
@@ -95,6 +135,13 @@ export default function AiQuiz() {
     }
   };
 
+  const useOfflineBank = () => {
+    setQuestions(createOfflineSet(topic, difficulty));
+    setUsingOfflineBank(true);
+    setRunKey((key) => key + 1);
+    setStatus("ready");
+  };
+
   const analyze = async (result: QuizResult) => {
     try {
       const response = await fetch(`${API_BASE}/api/analyze-quiz`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ topic, score: result.score, total: result.total, topicStats: result.topicStats, missedQuestions: result.missedQuestions.map((q) => q.question) }) });
@@ -106,7 +153,10 @@ export default function AiQuiz() {
     }
   };
 
-  if (status === "ready") return <section className="page-section" aria-label="AI quiz"><QuizRunner key={runKey} questions={questions} heading={`AI QUIZ · ${topic.toUpperCase()}`} onExit={() => setStatus("idle")} onComplete={analyze} /></section>;
+  if (status === "ready") return <section className="page-section" aria-label="AI quiz">
+    {usingOfflineBank && <div className="card fallback-notice"><strong>Offline question bank</strong><p>Gemini was unavailable, so this quiz uses 50 unique questions from the built-in DBMS bank. It prioritizes your selected topic and difficulty, then includes other topics to reach 50. The scorecard analysis is calculated locally.</p><button className="secondary-btn" onClick={() => setStatus("idle")}>Back to quiz setup</button></div>}
+    <QuizRunner key={runKey} questions={questions} heading={usingOfflineBank ? "OFFLINE DBMS PRACTICE" : `AI QUIZ · ${topic.toUpperCase()}`} onExit={() => setStatus("idle")} onComplete={usingOfflineBank ? async (result) => localAnalysis(result) : analyze} analysisTitle={usingOfflineBank ? "Quiz performance analysis" : "AI performance analysis"} />
+  </section>;
 
   return <section className="page-section" aria-labelledby="ai-quiz-heading">
     <div className="section-heading"><p className="tag">AI QUIZ</p><h2 id="ai-quiz-heading">A Fresh 50-Question DBMS Quiz</h2><p>Generate a new AI-written quiz on ER modelling, relational mapping, keys, normalization, and constraints. Finish it for a scorecard and personalized AI feedback.</p></div>
@@ -118,7 +168,7 @@ export default function AiQuiz() {
       </div>
       <div className="btn-row"><button className="primary-btn" disabled={status === "loading"} onClick={() => generate()}>{status === "loading" ? "Generating 50 questions…" : "Generate 50-question quiz"}</button></div>
       {status === "loading" && <p className="muted" role="status">{wakingBackend ? "Waking up the quiz service if it has been idle…" : `Generating questions ${progress}–${Math.min(progress + BATCH_SIZE, 50)} of 50 in short batches. Please keep this page open.`}</p>}
-      {status === "error" && <div className="error-box" role="alert"><strong>Could not generate the quiz.</strong> {message}<div className="btn-row"><button className="secondary-btn" onClick={() => generate(lastParams.current)}>Retry</button></div></div>}
+      {status === "error" && <div className="error-box" role="alert"><strong>Could not generate the quiz.</strong> {message}<div className="btn-row"><button className="secondary-btn" onClick={() => generate(lastParams.current)}>Retry AI generation</button><button className="primary-btn" onClick={useOfflineBank}>Use built-in 50-question bank</button></div><p className="muted">The built-in bank has 73 unique DBMS questions and works without the AI service.</p></div>}
     </div>
   </section>;
 }
