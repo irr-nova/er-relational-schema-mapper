@@ -40,8 +40,8 @@ The backend also serves mapping and image-to-ER endpoints. `GEMINI_API_KEY` is n
 ## Practice sections
 
 - **Competitive Exam Practice** contains a curated set of DBMS questions with links to official papers and answer sources. Filter by exam, year, and topic; company interview questions are not included.
-- **AI Quiz** requests 50 questions in batches of 10 and asks the AI service for feedback on the score and topic results.
-- If AI generation is unavailable, the built-in offline bank has 72 practice questions. The user can browse all 72 or take a 50-question quiz sampled from that bank. Offline score analysis is calculated in the browser. Built-in practice questions are not verified past exam questions.
+- **AI Quiz** requests 50 questions in batches of 10 and asks the AI service for feedback on the score and topic results. Its question navigator lets users revisit questions, track answered or unanswered status, and mark questions for review.
+- The 72-question built-in offline bank can be opened from AI Quiz setup or while a quiz is in progress. Users can browse all questions or take a 50-question quiz sampled from the bank. Offline score analysis is calculated in the browser. Built-in practice questions are not verified past exam questions.
 
 ## Build the deployed frontend
 

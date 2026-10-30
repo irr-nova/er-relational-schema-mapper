@@ -21,6 +21,6 @@ See the repository's top-level `README.md` for backend setup and Render deployme
 
 ## Question practice
 
-Competitive Exam Practice lets users filter the curated, source-linked questions by exam, year, and topic, browse the answer explanations, or take a quiz. AI Quiz generates 50 questions through five backend requests of 10 questions each and requests an AI feedback report when the quiz is submitted.
+Competitive Exam Practice lets users filter the curated, source-linked questions by exam, year, and topic, browse the answer explanations, or take a quiz. AI Quiz generates 50 questions through five backend requests of 10 questions each and requests an AI feedback report when the quiz is submitted. Its question navigator tracks answered and unanswered questions, supports jumping back to any question, and lets users mark questions for review.
 
-If AI generation is unavailable, users can always start the offline quiz or browse the full built-in DBMS bank. The bank currently contains 72 team-written practice questions. Offline quizzes select 50 unique questions from it and calculate score feedback locally; these practice questions are not official past exam questions.
+The offline bank can be opened from AI Quiz setup or while a quiz is in progress, even when AI generation is working. It contains 72 team-written practice questions that users can browse in full or use for a 50-question quiz. Offline quizzes select unique questions and calculate score feedback locally; these practice questions are not official past exam questions.
