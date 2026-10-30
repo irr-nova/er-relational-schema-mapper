@@ -5,11 +5,13 @@ import { DIFFICULTIES, TOPICS, type Difficulty, type Question } from "../data/qu
 
 type Params = { topic: string; difficulty: Difficulty; count: 50 };
 type Status = "idle" | "loading" | "error" | "ready";
+const BATCH_SIZE = 10;
+const TOTAL_BATCHES = 50 / BATCH_SIZE;
 
-function parseQuestions(data: unknown, topic: string, difficulty: Difficulty): Question[] | null {
+function parseQuestions(data: unknown, topic: string, difficulty: Difficulty, expectedCount: number): Question[] | null {
   if (!data || typeof data !== "object" || !Array.isArray((data as { questions?: unknown }).questions)) return null;
   const questions = (data as { questions: unknown[] }).questions;
-  if ((data as { valid?: boolean }).valid !== true || questions.length !== 50) return null;
+  if ((data as { valid?: boolean }).valid !== true || questions.length !== expectedCount) return null;
   const parsed: Question[] = [];
   for (const [i, item] of questions.entries()) {
     if (!item || typeof item !== "object") return null;
@@ -30,6 +32,7 @@ export default function AiQuiz() {
   const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const [progress, setProgress] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [runKey, setRunKey] = useState(0);
   const lastParams = useRef<Params>({ topic, difficulty, count: 50 });
@@ -38,25 +41,41 @@ export default function AiQuiz() {
     lastParams.current = params;
     setStatus("loading");
     setMessage("");
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 180000);
+    setProgress(0);
     try {
-      const response = await fetch(`${API_BASE}/api/generate-quiz`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params), signal: controller.signal });
-      const data: unknown = await response.json();
-      const parsed = response.ok ? parseQuestions(data, params.topic, params.difficulty) : null;
-      if (!parsed) {
-        setMessage((data as { message?: string })?.message ?? "The quiz service did not return exactly 50 valid questions.");
-        setStatus("error");
-        return;
+      const allQuestions: Question[] = [];
+      for (let batch = 0; batch < TOTAL_BATCHES; batch++) {
+        setProgress(batch * BATCH_SIZE);
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 90000);
+        let response: Response;
+        let data: unknown;
+        try {
+          response = await fetch(`${API_BASE}/api/generate-quiz`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...params, count: BATCH_SIZE, previousQuestions: allQuestions.map((q) => q.question) }),
+            signal: controller.signal,
+          });
+          data = await response.json();
+        } finally {
+          window.clearTimeout(timer);
+        }
+        const parsed = response.ok ? parseQuestions(data, params.topic, params.difficulty, BATCH_SIZE) : null;
+        if (!parsed) {
+          const detail = (data as { message?: string })?.message;
+          throw new Error(detail ? `Batch ${batch + 1}/${TOTAL_BATCHES}: ${detail}` : `Batch ${batch + 1}/${TOTAL_BATCHES} did not contain 10 valid questions.`);
+        }
+        allQuestions.push(...parsed);
       }
-      setQuestions(parsed);
+      if (allQuestions.length !== 50) throw new Error("The AI service did not return all 50 questions. Please retry.");
+      setQuestions(allQuestions);
       setRunKey((key) => key + 1);
+      setProgress(50);
       setStatus("ready");
     } catch (error) {
-      setMessage(error instanceof DOMException && error.name === "AbortError" ? "Quiz generation timed out." : "Could not reach the AI quiz service. Check that the backend is running.");
+      setMessage(error instanceof DOMException && error.name === "AbortError" ? `Batch generation timed out after ${Math.floor(progress / BATCH_SIZE) + 1} of ${TOTAL_BATCHES}. Retry to start a fresh quiz.` : error instanceof Error ? error.message : "Could not reach the AI quiz service. Check that the backend is running.");
       setStatus("error");
-    } finally {
-      window.clearTimeout(timer);
     }
   };
 
@@ -82,7 +101,7 @@ export default function AiQuiz() {
         <label>Question count<input value="50 questions each quiz" readOnly aria-label="Question count, fixed at 50" /></label>
       </div>
       <div className="btn-row"><button className="primary-btn" disabled={status === "loading"} onClick={() => generate()}>{status === "loading" ? "Generating 50 questions…" : "Generate 50-question quiz"}</button></div>
-      {status === "loading" && <p className="muted" role="status">The AI is preparing 50 questions. This can take a little while.</p>}
+      {status === "loading" && <p className="muted" role="status">Generating questions {progress}–{Math.min(progress + BATCH_SIZE, 50)} of 50 in short batches. Please keep this page open.</p>}
       {status === "error" && <div className="error-box" role="alert"><strong>Could not generate the quiz.</strong> {message}<div className="btn-row"><button className="secondary-btn" onClick={() => generate(lastParams.current)}>Retry</button></div></div>}
     </div>
   </section>;

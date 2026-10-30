@@ -30,7 +30,8 @@ TOPICS = ["ER Model", "Keys", "ER-to-Relational Mapping", "Relationships & Cardi
 class QuizRequest(BaseModel):
     topic: str = Field(min_length=1, max_length=80)
     difficulty: str = Field(pattern="^(Easy|Medium|Hard)$")
-    count: int = Field(ge=50, le=50)
+    count: int = Field(ge=1, le=10)
+    previousQuestions: list[str] = Field(default_factory=list, max_length=40)
 
 
 class AnalysisRequest(BaseModel):
@@ -118,16 +119,18 @@ def generate_text(prompt, max_output_tokens):
 def generate_quiz(req: QuizRequest):
     try:
         prompt = (
-            f"Write {req.count} multiple-choice questions for a DBMS course.\n"
+            f"Write exactly {req.count} multiple-choice questions for a DBMS course.\n"
             f"Topic selection: {req.topic}. Difficulty: {req.difficulty}.\n"
             f"Classify each question with exactly one topic from: {', '.join(TOPICS)}. "
             "If the topic selection is All DBMS Topics, balance questions across those topics. "
             "Otherwise use the selected topic for all questions. "
             "Each question has exactly 4 distinct options and exactly one correct answer. "
-            "Every fact must be correct. Reply with ONLY a JSON array, no other text, where each item is "
+            "Every fact must be correct. Do not repeat or closely paraphrase any question in this earlier batch list: "
+            f"{json.dumps(req.previousQuestions[-40:], ensure_ascii=False)}. "
+            "Keep each explanation to one concise sentence. Reply with ONLY a JSON array, no other text, where each item is "
             '{"question": str, "topic": str, "options": [4 strings], "correct_index": 0-3, "explanation": str}.'
         )
-        text, error = generate_text(prompt, 32768)
+        text, error = generate_text(prompt, 8192)
         if error:
             return error
         match = re.search(r"\[.*\]", text, re.S)
