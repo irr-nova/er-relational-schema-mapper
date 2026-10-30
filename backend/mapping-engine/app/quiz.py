@@ -8,9 +8,11 @@ Setup:
     pip install fastapi
     export GEMINI_API_KEY='your-key'         (Bash)
 
-Request : {"topic": "All DBMS Topics", "difficulty": "Medium", "count": 50}
+Request : {"topic": "All DBMS Topics", "difficulty": "Medium", "count": 10}
 Success : {"valid": true, "questions": [{"question", "topic", "options": [4 strings], "correct_index": 0-3, "explanation"}]}
 Failure : {"valid": false, "error_code", "message", "retryable"}
+
+The current frontend sends five requests of 10 questions to build a 50-question quiz.
 """
 import json
 import os

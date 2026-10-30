@@ -1,34 +1,58 @@
-# ER Mapper
+# ER Diagram to Relational Schema Mapper
 
-Requires Node.js 18 or newer.
+This repository contains a web app for building ER diagrams, mapping them to relational schemas, generating SQL, and practicing DBMS topics. The active app deployed on Render is in `frontend/`; the FastAPI service used by the app is in `backend/mapping-engine/`.
 
-```sh
-npm install
-npm run dev
-```
+**Live app:** [er-relational-schema-mapper.onrender.com](https://er-relational-schema-mapper.onrender.com/)
 
-The app includes the ER Builder, generated schema and SQL, Competitive Exam Practice, AI Quiz, Help and Developed By sections. The competitive bank contains only questions checked against an official paper and answer source; each item links to those documents. The AI Quiz service generates 50 questions per run and a score-based feedback report.
+## Run the active frontend
 
-## AI Quiz service
-
-The frontend calls `POST /api/generate-quiz` and `POST /api/analyze-quiz`. The quiz backend uses the same Gemini API key and `gemini-3.8-flash` model as the ER image processor. Keep the key in the backend environment; never put it in frontend code or commit it to Git.
-
-The quiz endpoints are part of the existing FastAPI mapping service, so the same `GEMINI_API_KEY` used by ER image extraction powers quiz generation and result analysis. Set that key on the deployed FastAPI service in Render. For local use, run the frontend and API in separate Bash terminals. Start the frontend from the repository root:
+Use Node.js `^20.19.0` or `>=22.12.0` (the requirement of the Vite version used by `frontend/`). In Git Bash:
 
 ```bash
-npm install
+cd frontend
+npm ci
 npm run dev
 ```
 
-In the second terminal, start the mapping service:
+Open the local URL printed by Vite. By default, the frontend API client points to the deployed API. To use a local backend instead, create `frontend/.env`:
+
+```dotenv
+VITE_API_BASE=http://127.0.0.1:8000
+```
+
+## Run the backend locally
+
+In a second Bash terminal:
 
 ```bash
 cd backend/mapping-engine
 python -m venv .venv
-source .venv/bin/activate
+source .venv/Scripts/activate
 pip install -r requirements.txt
-export GEMINI_API_KEY='your-existing-gemini-api-key'
-uvicorn app.main:app --reload --port 8000
+export GEMINI_API_KEY='your-gemini-api-key'
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The API listens on `http://127.0.0.1:8000` by default. Open the Vite URL from the first terminal and choose **AI Quiz**. The deployed frontend must have `VITE_API_BASE` set to this FastAPI service URL (the same URL used for mapping and image extraction). If needed, set `GEMINI_MODEL` to another model enabled for your Gemini API key; the default is `gemini-3.8-flash`.
+On macOS or Linux, activate the environment with `source .venv/bin/activate` instead.
+
+The backend also serves mapping and image-to-ER endpoints. `GEMINI_API_KEY` is needed for image extraction, AI question generation, and AI feedback; keep it in the backend environment and never in frontend code. The quiz service defaults to `gemini-3.8-flash`; `GEMINI_MODEL` can override the quiz model.
+
+## Practice sections
+
+- **Competitive Exam Practice** contains a curated set of DBMS questions with links to official papers and answer sources. Filter by exam, year, and topic; company interview questions are not included.
+- **AI Quiz** requests 50 questions in batches of 10 and asks the AI service for feedback on the score and topic results.
+- If AI generation is unavailable, the built-in offline bank has 72 practice questions. The user can browse all 72 or take a 50-question quiz sampled from that bank. Offline score analysis is calculated in the browser. Built-in practice questions are not verified past exam questions.
+
+## Build the deployed frontend
+
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+Render's static site uses branch `develop`, root directory `frontend/`, build command `npm ci && npm run build`, and publish directory `dist`. The API is a separate Render web service rooted at `backend/mapping-engine/`, started with `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+
+## Other project folders
+
+`standalone-ai-version/` and `frontend/er-builder/` are separate prototypes; they are not the frontend deployed on Render. The root-level `src/` and root `package.json` are also from an earlier app setup. Make active product changes in `frontend/src/` and backend service changes in `backend/mapping-engine/`.
