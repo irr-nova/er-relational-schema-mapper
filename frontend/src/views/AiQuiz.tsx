@@ -33,6 +33,7 @@ export default function AiQuiz() {
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const [progress, setProgress] = useState(0);
+  const [wakingBackend, setWakingBackend] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [runKey, setRunKey] = useState(0);
   const lastParams = useRef<Params>({ topic, difficulty, count: 50 });
@@ -43,11 +44,26 @@ export default function AiQuiz() {
     setMessage("");
     setProgress(0);
     try {
+      // Render's free API service sleeps when idle. Wake it before starting a
+      // long Gemini request so its cold-start delay doesn't consume the batch timeout.
+      setWakingBackend(true);
+      const wakeController = new AbortController();
+      const wakeTimer = window.setTimeout(() => wakeController.abort(), 180000);
+      try {
+        const health = await fetch(`${API_BASE}/health`, { signal: wakeController.signal });
+        if (!health.ok) throw new Error("The quiz service is not responding. Please retry in a moment.");
+      } finally {
+        window.clearTimeout(wakeTimer);
+        setWakingBackend(false);
+      }
+
       const allQuestions: Question[] = [];
       for (let batch = 0; batch < TOTAL_BATCHES; batch++) {
         setProgress(batch * BATCH_SIZE);
         const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), 90000);
+        // Let the backend's 180-second Gemini request timeout return a helpful
+        // provider error before the browser gives up.
+        const timer = window.setTimeout(() => controller.abort(), 210000);
         let response: Response;
         let data: unknown;
         try {
@@ -101,7 +117,7 @@ export default function AiQuiz() {
         <label>Question count<input value="50 questions each quiz" readOnly aria-label="Question count, fixed at 50" /></label>
       </div>
       <div className="btn-row"><button className="primary-btn" disabled={status === "loading"} onClick={() => generate()}>{status === "loading" ? "Generating 50 questions…" : "Generate 50-question quiz"}</button></div>
-      {status === "loading" && <p className="muted" role="status">Generating questions {progress}–{Math.min(progress + BATCH_SIZE, 50)} of 50 in short batches. Please keep this page open.</p>}
+      {status === "loading" && <p className="muted" role="status">{wakingBackend ? "Waking up the quiz service if it has been idle…" : `Generating questions ${progress}–${Math.min(progress + BATCH_SIZE, 50)} of 50 in short batches. Please keep this page open.`}</p>}
       {status === "error" && <div className="error-box" role="alert"><strong>Could not generate the quiz.</strong> {message}<div className="btn-row"><button className="secondary-btn" onClick={() => generate(lastParams.current)}>Retry</button></div></div>}
     </div>
   </section>;
